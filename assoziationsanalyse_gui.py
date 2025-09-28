@@ -9,6 +9,9 @@ import hashlib
 import re
 import os
 import traceback
+import sys
+ 
+ 
 
 plt.rcParams['figure.autolayout'] = True
 
@@ -250,16 +253,12 @@ class App(tk.Tk):
         ttk.Label(frm, text="Min confidence:").grid(row=3, column=0, sticky="w")
         ttk.Entry(frm, textvariable=self.min_confidence, width=15).grid(row=3, column=1, sticky="w", **pad)
 
-        # Graph controls
-        graph_actions = ttk.Frame(frm)
-        graph_actions.grid(row=4, column=1, sticky="w", **pad)
-        ttk.Button(graph_actions, text="Show graph", command=self.show_rule_graph).pack(side="left", padx=3)
-
-        # Run button
+        # Action buttons
         actions = ttk.Frame(frm)
         actions.grid(row=5, column=1, sticky="w", **pad)
         ttk.Button(actions, text="Run analysis", command=self.on_run).pack(side="left", padx=3)
         ttk.Button(actions, text="Show Top 20", command=self.show_top20).pack(side="left", padx=3)
+        ttk.Button(actions, text="Show graph", command=self.show_rule_graph).pack(side="left", padx=3)
 
         # Log
         ttk.Label(frm, text="Log:").grid(row=6, column=0, sticky="nw")
@@ -608,6 +607,8 @@ class App(tk.Tk):
             plt.show()
         except Exception as e:
             messagebox.showerror("Error", str(e))
+
+    
 
 
 if __name__ == "__main__":
