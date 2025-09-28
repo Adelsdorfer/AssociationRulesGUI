@@ -1,8 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+
 <title>Association Analysis (Apriori) GUI</title>
 <style>
   :root { --fg:#222; --muted:#666; --bg:#fff; --border:#e5e7eb; }
