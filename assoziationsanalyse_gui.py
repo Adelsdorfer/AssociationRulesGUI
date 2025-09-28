@@ -31,17 +31,17 @@ def run_analysis(input_path: str, output_path: str, min_support: float, min_conf
         log.update_idletasks()
 
     try:
-        log_print(f"Lese Excel-Datei: {input_path}")
+        log_print(f"Reading Excel file: {input_path}")
         df = pd.read_excel(input_path, engine='openpyxl')
 
         if df.shape[1] < 3:
-            raise ValueError("Die Excel-Datei muss mindestens drei Spalten enthalten (z.B. Transaktions-ID, Artikel, Bestellnummer).")
+            raise ValueError("The Excel file must contain at least three columns (e.g., transaction ID, item, order number).")
 
         id_column = df.columns[0]
         item_column = df.columns[1]
         bestellnummer_column = df.columns[2]
 
-        log_print(f"Spalten erkannt -> ID: {id_column}, Artikel: {item_column}, Bestellnr.: {bestellnummer_column}")
+        log_print(f"Detected columns -> ID: {id_column}, Item: {item_column}, Order no.: {bestellnummer_column}")
 
         unique_items = df[[item_column, bestellnummer_column]].drop_duplicates()
         item_bestell_map = dict(zip(unique_items[item_column], unique_items[bestellnummer_column]))
@@ -52,36 +52,36 @@ def run_analysis(input_path: str, output_path: str, min_support: float, min_conf
 
         transactions = grouped['Items'].tolist()
         if not transactions:
-            raise ValueError("Keine Transaktionen gefunden. Bitte überprüfe die Daten.")
+            raise ValueError("No transactions found. Please check your data.")
 
-        log_print("Transformiere Transaktionen (One-Hot-Encoding)")
+        log_print("Transforming transactions (one-hot encoding)")
         te = TransactionEncoder()
         te_ary = te.fit(transactions).transform(transactions)
         df_transformed = pd.DataFrame(te_ary, columns=te.columns_)
 
-        log_print(f"Suche häufige Itemsets (min_support={min_support})")
+        log_print(f"Mining frequent itemsets (min_support={min_support})")
         frequent_itemsets = apriori(df_transformed, min_support=min_support, use_colnames=True)
 
-        log_print(f"Erzeuge Assoziationsregeln (min_confidence={min_confidence})")
+        log_print(f"Generating association rules (min_confidence={min_confidence})")
         rules = association_rules(frequent_itemsets, metric="confidence", min_threshold=min_confidence)
 
         if rules.empty:
-            log_print("Keine Regeln gefunden mit den gewählten Schwellenwerten.")
+            log_print("No rules found with the selected thresholds.")
         else:
-            log_print(f"Gefundene Regeln: {len(rules)}")
+            log_print(f"Rules found: {len(rules)}")
 
         # combination_count
-        log_print("Berechne combination_count")
+        log_print("Calculating combination_count")
         rules['combination_count'] = rules.apply(
             lambda row: df_transformed.loc[
-                (df_transformed[list(row['antecedents'])].all(axis=1)) &
-                (df_transformed[list(row['consequents'])].all(axis=1))
+                  (df_transformed[list(row['antecedents'])].all(axis=1)) &
+                  (df_transformed[list(row['consequents'])].all(axis=1))
             ].shape[0],
             axis=1
         )
 
         # Mat_combination
-        log_print("Erzeuge Mat_combination und ID")
+        log_print("Creating Mat_combination and ID")
 
         def get_mat_combination(row):
             items_in_rule = row['antecedents'].union(row['consequents'])
@@ -125,9 +125,9 @@ def run_analysis(input_path: str, output_path: str, min_support: float, min_conf
         if not os.path.exists(out_dir):
             os.makedirs(out_dir, exist_ok=True)
 
-        log_print(f"Exportiere nach: {output_path}")
+        log_print(f"Exporting to: {output_path}")
         rules_export.to_excel(output_path, index=False)
-        log_print("Export abgeschlossen.")
+        log_print("Export completed.")
 
         # Callback with results for UI table
         if on_results is not None:
@@ -136,8 +136,9 @@ def run_analysis(input_path: str, output_path: str, min_support: float, min_conf
             except Exception:
                 pass
 
+        # Optional: directed rule graph (confidence as weight)
         if show_graph and not rules.empty:
-            log_print("Erzeuge Link-Graph...")
+            log_print("Creating link graph...")
             G = nx.DiGraph()
 
             # Kanten hinzufügen
@@ -196,7 +197,8 @@ def run_analysis(input_path: str, output_path: str, min_support: float, min_conf
             plt.axis('off')
             plt.show()
 
-        messagebox.showinfo("Done", f"Association rules exported: {output_path}")
+
+        log_print(f"Done: Association rules exported to: {output_path}")
 
     except Exception as e:
         err = "".join(traceback.format_exception(type(e), e, e.__traceback__))
@@ -248,10 +250,16 @@ class App(tk.Tk):
         ttk.Label(frm, text="Min confidence:").grid(row=3, column=0, sticky="w")
         ttk.Entry(frm, textvariable=self.min_confidence, width=15).grid(row=3, column=1, sticky="w", **pad)
 
-        ttk.Checkbutton(frm, text="Show graph", variable=self.show_graph).grid(row=4, column=1, sticky="w", **pad)
+        # Graph controls
+        graph_actions = ttk.Frame(frm)
+        graph_actions.grid(row=4, column=1, sticky="w", **pad)
+        ttk.Button(graph_actions, text="Show graph", command=self.show_rule_graph).pack(side="left", padx=3)
 
         # Run button
-        ttk.Button(frm, text="Run analysis", command=self.on_run).grid(row=5, column=1, sticky="w", **pad)
+        actions = ttk.Frame(frm)
+        actions.grid(row=5, column=1, sticky="w", **pad)
+        ttk.Button(actions, text="Run analysis", command=self.on_run).pack(side="left", padx=3)
+        ttk.Button(actions, text="Show Top 20", command=self.show_top20).pack(side="left", padx=3)
 
         # Log
         ttk.Label(frm, text="Log:").grid(row=6, column=0, sticky="nw")
@@ -375,7 +383,7 @@ class App(tk.Tk):
                 output_path=output_path,
                 min_support=min_support,
                 min_confidence=min_confidence,
-                show_graph=self.show_graph.get(),
+                show_graph=False,
                 log=self.txt_log,
                 on_results=self.on_results_ready
             )
@@ -519,6 +527,87 @@ class App(tk.Tk):
     def update_visible_columns(self):
         # Just refresh table with new column set
         self.refresh_table()
+
+    def show_top20(self):
+        if self._rules_df is None or self._rules_df.empty:
+            messagebox.showinfo("Info", "No results available. Run analysis first.")
+            return
+        try:
+            df = self._rules_df
+            if 'combination_count' not in df.columns:
+                messagebox.showinfo("Info", "'combination_count' not available.")
+                return
+            top = df.sort_values('combination_count', ascending=False).head(20).copy()
+            if top.empty:
+                messagebox.showinfo("Info", "No data for Top 20 chart.")
+                return
+            fig, ax = plt.subplots(figsize=(12, 7))
+            labels = top['Mat_combination'] if 'Mat_combination' in top.columns else (top['antecedents'] + ' -> ' + top['consequents'])
+            ax.barh(range(len(top)), top['combination_count'], color='#4C78A8')
+            ax.set_yticks(range(len(top)))
+            def trunc(s, n=60):
+                s = str(s)
+                return s if len(s) <= n else s[:n-1] + '…'
+            ax.set_yticklabels([trunc(s) for s in labels])
+            ax.invert_yaxis()
+            ax.set_xlabel('Combination count')
+            ax.set_title('Top 20 material combinations by combination count')
+            plt.tight_layout()
+            plt.show()
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
+
+    def show_rule_graph(self):
+        if self._rules_df is None or self._rules_df.empty:
+            messagebox.showinfo("Info", "No results available. Run analysis first.")
+            return
+        try:
+            rules = self._rules_df
+            # Need antecedents/consequents and confidence/combination_count; ensure presence
+            required = {'antecedents','consequents','confidence','combination_count'}
+            if not required.issubset(set(rules.columns)):
+                messagebox.showinfo("Info", "Required columns not available for graph.")
+                return
+            G = nx.DiGraph()
+            for _, row in rules.iterrows():
+                G.add_edge(row['antecedents'], row['consequents'], weight=row['confidence'], combination_count=row['combination_count'])
+
+            node_sizes = {}
+            for node in G.nodes():
+                total_count = rules.apply(
+                    lambda r: r['combination_count'] if (node in r['antecedents']) or (node in r['consequents']) else 0,
+                    axis=1
+                ).sum()
+                node_sizes[node] = total_count
+
+            min_size = 300
+            max_size = 3000
+            counts = list(node_sizes.values())
+            if counts:
+                min_count = min(counts); max_count = max(counts)
+                if max_count == min_count:
+                    scaled_sizes = {node: (min_size + max_size) / 2 for node in node_sizes}
+                else:
+                    scaled_sizes = {node: min_size + (size - min_count) / (max_count - min_count) * (max_size - min_size) for node, size in node_sizes.items()}
+            else:
+                scaled_sizes = {node: min_size for node in node_sizes}
+
+            pos = nx.spring_layout(G, dim=2, k=0.3, scale=20.0, center=None, iterations=100)
+            edges = G.edges(data=True)
+
+            nx.draw_networkx_edges(
+                G, pos, edgelist=edges, arrowstyle='-|>', arrowsize=7,
+                edge_color=[d['weight'] for (u, v, d) in edges], edge_cmap=plt.cm.Blues, width=2
+            )
+            nx.draw_networkx_nodes(G, pos, node_size=[scaled_sizes[node] for node in G.nodes()], node_color='skyblue')
+            nx.draw_networkx_labels(G, pos, font_size=9, font_color='purple')
+            edge_labels = {(u, v): f"{d['weight']:.2f}" for u, v, d in G.edges(data=True)}
+            nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color='red', font_size=8)
+            plt.title('Association rules link graph (by confidence)')
+            plt.axis('off')
+            plt.show()
+        except Exception as e:
+            messagebox.showerror("Error", str(e))
 
 
 if __name__ == "__main__":
