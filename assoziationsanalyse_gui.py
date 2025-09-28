@@ -208,13 +208,13 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Association Analysis (Apriori) – GUI")
-        self.geometry("920x640")
+        self.geometry("1800x950")
 
         self.input_path = tk.StringVar(value=r"C:\\Assoziationsanalyse\\SPC.xlsx")
         self.output_path = tk.StringVar(value=r"C:\\Assoziationsanalyse\\SPC_Regeln.xlsx")
         self.min_support = tk.StringVar(value="0.001")
         self.min_confidence = tk.StringVar(value="0.15")
-        self.show_graph = tk.BooleanVar(value=True)
+        self.show_graph = tk.BooleanVar(value=False)
 
         # Data storage for results
         self._rules_df = None           # full results DataFrame
