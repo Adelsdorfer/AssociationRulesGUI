@@ -214,6 +214,7 @@ class App(tk.Tk):
         super().__init__()
         self.title("Association Analysis (Apriori) – GUI")
         self.geometry("1800x950")
+        self._apply_theme()
 
         self.input_path = tk.StringVar(value=r"C:\\Assoziationsanalyse\\SPC.xlsx")
         self.output_path = tk.StringVar(value=r"C:\\Assoziationsanalyse\\SPC_Regeln.xlsx")
@@ -254,29 +255,29 @@ class App(tk.Tk):
         ttk.Entry(frm, textvariable=self.min_confidence, width=15).grid(row=3, column=1, sticky="w", **pad)
 
         # Action buttons
-        actions = ttk.Frame(frm)
+        actions = ttk.Frame(frm, style="App.TFrame")
         actions.grid(row=5, column=1, sticky="w", **pad)
-        ttk.Button(actions, text="Run analysis", command=self.on_run).pack(side="left", padx=3)
-        ttk.Button(actions, text="Show Top 20", command=self.show_top20).pack(side="left", padx=3)
-        ttk.Button(actions, text="Show graph", command=self.show_rule_graph).pack(side="left", padx=3)
+        ttk.Button(actions, text="Run analysis", style="Primary.TButton", command=self.on_run).pack(side="left", padx=3)
+        ttk.Button(actions, text="Show Top 20", style="Accent.TButton", command=self.show_top20).pack(side="left", padx=3)
+        ttk.Button(actions, text="Show graph", style="Accent.TButton", command=self.show_rule_graph).pack(side="left", padx=3)
 
         # Log
         ttk.Label(frm, text="Log:").grid(row=6, column=0, sticky="nw")
-        self.txt_log = tk.Text(frm, height=10, state="disabled")
+        self.txt_log = tk.Text(frm, height=10, state="disabled", bg="#D9ECFF", fg="#0F1C2E")
         self.txt_log.grid(row=6, column=1, columnspan=2, sticky="nsew", **pad)
 
         # Results filter controls
         ttk.Label(frm, text="Exclude (terms, comma-separated):").grid(row=7, column=0, sticky="w")
         self.exclude_entry = ttk.Entry(frm)
         self.exclude_entry.grid(row=7, column=1, sticky="we", **pad)
-        btns = ttk.Frame(frm)
+        btns = ttk.Frame(frm, style="App.TFrame")
         btns.grid(row=7, column=2, sticky="e", **pad)
-        ttk.Button(btns, text="Apply filter", command=self.apply_filter).pack(side="left", padx=3)
-        ttk.Button(btns, text="Reset", command=self.reset_filter).pack(side="left", padx=3)
-        ttk.Button(btns, text="Save filtered...", command=self.save_filtered).pack(side="left", padx=3)
+        ttk.Button(btns, text="Apply filter", style="Accent.TButton", command=self.apply_filter).pack(side="left", padx=3)
+        ttk.Button(btns, text="Reset", style="Accent.TButton", command=self.reset_filter).pack(side="left", padx=3)
+        ttk.Button(btns, text="Save filtered...", style="Accent.TButton", command=self.save_filtered).pack(side="left", padx=3)
 
         # Metric column toggles (confidence always visible)
-        toggles = ttk.Labelframe(frm, text="Visible metrics")
+        toggles = ttk.Labelframe(frm, text="Visible metrics", style="App.TLabelframe")
         toggles.grid(row=8, column=1, columnspan=2, sticky="we", **pad)
         self.metric_vars = {
             'support': tk.BooleanVar(value=False),
@@ -335,13 +336,61 @@ class App(tk.Tk):
         hsb.grid(row=10, column=1, sticky="we", **pad)
 
         # Footer / Copyright
-        footer = ttk.Label(frm, text="© Roland Emrich", foreground="#666666")
+        footer = ttk.Label(frm, text="© Roland Emrich", foreground="#333333", background="#D9ECFF")
         footer.grid(row=11, column=1, sticky="e", **pad)
 
         # Resizing behavior
         frm.columnconfigure(1, weight=1)
         frm.rowconfigure(6, weight=0)
         frm.rowconfigure(9, weight=1)
+
+    def _apply_theme(self):
+        base_bg = "#D9ECFF"  # light blue
+        base_fg = "#0F1C2E"
+        accent = "#FFA500"   # orange
+        primary = "#E53935"  # red
+
+        # Root bg
+        self.configure(bg=base_bg)
+
+        style = ttk.Style(self)
+        try:
+            # Use default theme as base
+            current = style.theme_use()
+        except Exception:
+            pass
+
+        # General backgrounds
+        style.configure("TFrame", background=base_bg)
+        style.configure("App.TFrame", background=base_bg)
+        style.configure("TLabel", background=base_bg, foreground=base_fg)
+        style.configure("TLabelframe", background=base_bg, foreground=base_fg)
+        style.configure("App.TLabelframe", background=base_bg, foreground=base_fg)
+        style.configure("TLabelframe.Label", background=base_bg, foreground=base_fg)
+
+        # Buttons (always black text)
+        style.configure("TButton", background=base_bg, foreground="#000000", padding=6)
+        style.map("TButton",
+                  background=[('active', '#CBE5FF')],
+                  foreground=[('active', '#000000'), ('pressed', '#000000')])
+        style.configure("Accent.TButton", background=accent, foreground="#000000")
+        style.map("Accent.TButton",
+                  background=[('active', '#FFB347')],
+                  foreground=[('active', '#000000'), ('pressed', '#000000')])
+        style.configure("Primary.TButton", background=primary, foreground="#000000")
+        style.map("Primary.TButton",
+                  background=[('active', '#EF5350')],
+                  foreground=[('active', '#000000'), ('pressed', '#000000')])
+
+        # Checkbuttons (label background light blue)
+        style.configure("TCheckbutton", background=base_bg, foreground=base_fg)
+
+        # Treeview colors
+        style.configure("Treeview",
+                        background="#EFF7FF",
+                        fieldbackground="#EFF7FF",
+                        foreground=base_fg)
+        style.configure("Treeview.Heading", background="#BFE2FF", foreground=base_fg)
 
     def browse_input(self):
         path = filedialog.askopenfilename(
