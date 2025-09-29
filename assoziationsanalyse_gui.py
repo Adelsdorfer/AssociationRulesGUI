@@ -347,8 +347,10 @@ class App(tk.Tk):
     def _apply_theme(self):
         base_bg = "#D9ECFF"  # light blue
         base_fg = "#0F1C2E"
-        accent = "#FFA500"   # orange
-        primary = "#E53935"  # red
+        # Unified green buttons
+        accent = "#4CAF50"   # green
+        primary = "#4CAF50"  # green
+        hover_green = "#66BB6A"
 
         # Root bg
         self.configure(bg=base_bg)
@@ -375,11 +377,11 @@ class App(tk.Tk):
                   foreground=[('active', '#000000'), ('pressed', '#000000')])
         style.configure("Accent.TButton", background=accent, foreground="#000000")
         style.map("Accent.TButton",
-                  background=[('active', '#FFB347')],
+                  background=[('active', hover_green)],
                   foreground=[('active', '#000000'), ('pressed', '#000000')])
         style.configure("Primary.TButton", background=primary, foreground="#000000")
         style.map("Primary.TButton",
-                  background=[('active', '#EF5350')],
+                  background=[('active', hover_green)],
                   foreground=[('active', '#000000'), ('pressed', '#000000')])
 
         # Checkbuttons (label background light blue)
@@ -590,7 +592,7 @@ class App(tk.Tk):
                 messagebox.showinfo("Info", "No data for Top 20 chart.")
                 return
             fig, ax = plt.subplots(figsize=(12, 7))
-            labels = top['Mat_combination'] if 'Mat_combination' in top.columns else (top['antecedents'] + ' -> ' + top['consequents'])
+            labels = (top['antecedents'] + ' -> ' + top['consequents'])
             ax.barh(range(len(top)), top['combination_count'], color='#4C78A8')
             ax.set_yticks(range(len(top)))
             def trunc(s, n=60):
