@@ -2388,6 +2388,14 @@
       const radius = d3.scaleSqrt()
         .domain(d3.extent(nodes, d => d.count))
         .range([10, 34]);
+      const nodeVisualRadius = d => {
+        const itemCount = Math.max(1, d.items || 1);
+        const baseRadius = radius(d.count);
+        if (itemCount === 1) return baseRadius;
+        const dotRadius = compoundDotRadius(d);
+        const ringRadius = compoundRingRadius(d);
+        return ringRadius + dotRadius;
+      };
       const linkWidth = d3.scaleSqrt()
         .domain(d3.extent(links, d => d.count))
         .range([1.1, 4.2]);
@@ -2434,7 +2442,7 @@
       const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(d => 130 + Math.min(160, String(d.source.id || d.source).length + String(d.target.id || d.target).length)))
         .force("charge", d3.forceManyBody().strength(-520))
-        .force("collide", d3.forceCollide().radius(d => radius(d.count) + 28))
+        .force("collide", d3.forceCollide().radius(d => nodeVisualRadius(d) + 28))
         .force("x", d3.forceX(width / 2).strength(0.065))
         .force("y", d3.forceY(height / 2).strength(0.075));
 
@@ -2459,18 +2467,40 @@
         .attr("text-anchor", "middle")
         .text(d => `${Math.round(d.confidence * 100)}%`);
 
-      const node = nodeLayer.selectAll("circle")
+      const node = nodeLayer.selectAll("g.node")
         .data(nodes)
-        .join("circle")
-        .attr("r", d => radius(d.count))
-        .attr("fill", d => d.items > 1 ? "#e4a72f" : "#77a889")
-        .attr("stroke", "rgba(255,250,240,0.82)")
-        .attr("stroke-width", 1.6)
+        .join("g")
+        .attr("class", "node")
         .attr("filter", "url(#nodeGlow)")
         .call(d3.drag()
           .on("start", dragstarted)
           .on("drag", dragged)
           .on("end", dragended));
+
+      node.each(function(d) {
+        const group = d3.select(this);
+        const itemCount = Math.max(1, d.items || 1);
+        if (itemCount === 1) {
+          group.append("circle")
+            .attr("class", "node-part")
+            .attr("r", radius(d.count))
+            .attr("fill", "#77a889")
+            .attr("stroke", "rgba(255,250,240,0.82)")
+            .attr("stroke-width", 1.6);
+          return;
+        }
+
+        group.selectAll("circle.node-part")
+          .data(compoundNodeParts(d))
+          .join("circle")
+          .attr("class", "node-part")
+          .attr("cx", part => part.x)
+          .attr("cy", part => part.y)
+          .attr("r", part => part.r)
+          .attr("fill", part => part.fill)
+          .attr("stroke", "rgba(255,250,240,0.82)")
+          .attr("stroke-width", 1.35);
+      });
 
       const label = labelLayer.selectAll("text")
         .data(nodes)
@@ -2492,6 +2522,39 @@
         if (nodeDatum.costKeys.has(costKey)) return;
         nodeDatum.costKeys.add(costKey);
         nodeDatum.costSum += amount;
+      }
+
+      function compoundDotRadius(nodeDatum) {
+        return Math.max(9, Math.min(18, radius(nodeDatum.count) * 0.78));
+      }
+
+      function compoundRingRadius(nodeDatum) {
+        const itemCount = Math.max(1, nodeDatum.items || 1);
+        if (itemCount <= 1) return 0;
+        return itemCount === 2 ? compoundDotRadius(nodeDatum) : compoundDotRadius(nodeDatum) * 1.08;
+      }
+
+      function compoundNodeParts(nodeDatum) {
+        const itemCount = Math.max(1, nodeDatum.items || 1);
+        const dotRadius = compoundDotRadius(nodeDatum);
+        if (itemCount === 2) {
+          return [
+            { x: -dotRadius, y: 0, r: dotRadius, fill: "#e4a72f" },
+            { x: dotRadius, y: 0, r: dotRadius, fill: "#f0c964" }
+          ];
+        }
+
+        const ringRadius = compoundRingRadius(nodeDatum);
+        const palette = ["#e4a72f", "#f0c964", "#c88b2e", "#77a889", "#9ebc9f", "#4c8796"];
+        return Array.from({ length: itemCount }, (_, index) => {
+          const angle = (-Math.PI / 2) + (index / itemCount) * Math.PI * 2;
+          return {
+            x: Math.cos(angle) * ringRadius,
+            y: Math.sin(angle) * ringRadius,
+            r: dotRadius,
+            fill: palette[index % palette.length]
+          };
+        });
       }
 
       function assignEdgeLabelOffsets(edgeList) {
@@ -2535,7 +2598,8 @@
       function setGraphFocus(nodeId) {
         focusedNodeId = nodeId;
         if (!focusedNodeId) {
-          node.attr("opacity", 1).attr("pointer-events", "all").attr("stroke-width", 1.6);
+          node.attr("opacity", 1).attr("pointer-events", "all");
+          node.selectAll("circle").attr("stroke-width", 1.6);
           label.attr("opacity", 1);
           link.attr("opacity", 1).attr("stroke-opacity", 0.66).attr("pointer-events", "stroke");
           edgeLabel.attr("opacity", 1);
@@ -2547,8 +2611,11 @@
         const visibleLinkCount = links.filter(isConnectedToFocus).length;
         node
           .attr("opacity", d => isNodeInFocus(d) ? 1 : 0)
-          .attr("pointer-events", d => isNodeInFocus(d) ? "all" : "none")
-          .attr("stroke-width", d => d.id === focusedNodeId ? 3.2 : 1.6);
+          .attr("pointer-events", d => isNodeInFocus(d) ? "all" : "none");
+        node.selectAll("circle")
+          .attr("stroke-width", function() {
+            return d3.select(this.parentNode).datum().id === focusedNodeId ? 3.2 : 1.6;
+          });
         label
           .attr("opacity", d => isNodeInFocus(d) ? 1 : 0);
         link
@@ -2603,14 +2670,14 @@
           const dx = d.target.x - d.source.x;
           const dy = d.target.y - d.source.y;
           const distance = Math.sqrt(dx * dx + dy * dy) || 1;
-          const targetRadius = radius(d.target.count) + 10;
+          const targetRadius = nodeVisualRadius(d.target) + 10;
           const targetX = d.target.x - (dx / distance) * targetRadius;
           const targetY = d.target.y - (dy / distance) * targetRadius;
           const dr = distance * 1.45;
           return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
         });
-        node.attr("cx", d => d.x).attr("cy", d => d.y);
-        label.attr("x", d => d.x).attr("y", d => d.y + radius(d.count) + 14);
+        node.attr("transform", d => `translate(${d.x},${d.y})`);
+        label.attr("x", d => d.x).attr("y", d => d.y + nodeVisualRadius(d) + 14);
         edgeLabel
           .attr("x", d => edgeLabelPosition(d).x)
           .attr("y", d => edgeLabelPosition(d).y);
