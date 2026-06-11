@@ -673,6 +673,111 @@
       margin: 0 18px 18px;
     }
 
+    .graph-detail-panel {
+      position: absolute;
+      top: 82px;
+      right: 18px;
+      z-index: 6;
+      display: none;
+      width: min(390px, calc(100% - 36px));
+      max-height: calc(100% - 124px);
+      overflow: auto;
+      padding: 16px;
+      border: 1px solid rgba(255, 250, 240, 0.18);
+      border-radius: 14px;
+      color: rgba(255, 250, 240, 0.92);
+      background: rgba(13, 23, 21, 0.88);
+      box-shadow: 0 22px 58px rgba(0, 0, 0, 0.34);
+      backdrop-filter: blur(14px);
+    }
+
+    .graph-detail-panel.open {
+      display: block;
+    }
+
+    .graph-detail-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .graph-detail-head h4 {
+      margin: 0;
+      color: #fffaf0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .graph-detail-type {
+      margin: 0 0 4px;
+      color: rgba(255, 250, 240, 0.58);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .graph-detail-close {
+      flex: 0 0 auto;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 250, 240, 0.18);
+      border-radius: 999px;
+      color: rgba(255, 250, 240, 0.88);
+      background: rgba(255, 250, 240, 0.10);
+      font-size: 18px;
+      line-height: 1;
+    }
+
+    .graph-detail-grid {
+      display: grid;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+
+    .graph-detail-row {
+      display: grid;
+      grid-template-columns: minmax(110px, 0.7fr) minmax(0, 1fr);
+      gap: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 250, 240, 0.10);
+      font-size: 13px;
+    }
+
+    .graph-detail-row span:first-child {
+      color: rgba(255, 250, 240, 0.58);
+      font-weight: 800;
+    }
+
+    .graph-detail-row span:last-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
+      color: rgba(255, 250, 240, 0.92);
+    }
+
+    .graph-detail-ids {
+      display: grid;
+      gap: 8px;
+    }
+
+    .graph-detail-ids textarea {
+      width: 100%;
+      min-height: 132px;
+      resize: vertical;
+      border: 1px solid rgba(255, 250, 240, 0.18);
+      border-radius: 10px;
+      color: #f8f4e8;
+      background: rgba(0, 0, 0, 0.22);
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .graph-detail-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+
     body.graph-modal-open {
       overflow: auto;
     }
@@ -1155,6 +1260,23 @@
               </div>
             </div>
             <svg id="ruleGraph" role="img" aria-label="Association rule graph"></svg>
+            <aside class="graph-detail-panel" id="graphDetailPanel" aria-live="polite">
+              <div class="graph-detail-head">
+                <div>
+                  <p class="graph-detail-type" id="graphDetailType">Selection</p>
+                  <h4 id="graphDetailTitle">No selection</h4>
+                </div>
+                <button class="graph-detail-close" id="graphDetailCloseBtn" type="button" aria-label="Close graph details">&times;</button>
+              </div>
+              <div class="graph-detail-grid" id="graphDetailMetrics"></div>
+              <div class="graph-detail-ids">
+                <label for="graphDetailIds">Transaction IDs</label>
+                <textarea id="graphDetailIds" readonly></textarea>
+                <div class="graph-detail-actions">
+                  <button class="btn-graph" id="graphDetailCopyBtn" type="button">Copy IDs</button>
+                </div>
+              </div>
+            </aside>
             <div class="graph-controls">
               <div class="field">
                 <label for="graphLimit">Max. edges</label>
@@ -1760,12 +1882,99 @@
       return hasPrice ? total : null;
     }
 
+    function matchingTransactionIds(transactionsWithIds, items) {
+      return transactionsWithIds
+        .filter(transaction => containsAll(transaction.itemSet, items))
+        .map(transaction => transaction.id);
+    }
+
+    function mergeUniqueIds(targetSet, ids) {
+      for (const id of ids || []) {
+        if (id !== null && id !== undefined && id !== "") targetSet.add(String(id));
+      }
+    }
+
+    function formatTransactionIds(ids, limit = 18) {
+      const uniqueIds = [...new Set(ids || [])].filter(Boolean);
+      if (!uniqueIds.length) return "none";
+      const visible = uniqueIds.slice(0, limit).join(", ");
+      const remaining = uniqueIds.length - limit;
+      return remaining > 0 ? `${visible} +${remaining} more` : visible;
+    }
+
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function setGraphDetail(type, title, rows, transactionIds) {
+      const ids = [...new Set(transactionIds || [])].filter(Boolean);
+      const panel = el("graphDetailPanel");
+      el("graphDetailType").textContent = type;
+      el("graphDetailTitle").textContent = title;
+      el("graphDetailMetrics").innerHTML = rows.map(row => `
+        <div class="graph-detail-row">
+          <span>${escapeHtml(row.label)}</span>
+          <span>${escapeHtml(row.value)}</span>
+        </div>
+      `).join("");
+      el("graphDetailIds").value = ids.join("\n");
+      el("graphDetailCopyBtn").disabled = ids.length === 0;
+      panel.classList.add("open");
+    }
+
+    function closeGraphDetail() {
+      el("graphDetailPanel").classList.remove("open");
+    }
+
+    async function copyGraphDetailIds() {
+      const text = el("graphDetailIds").value;
+      if (!text) {
+        toast("No transaction IDs to copy.");
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        toast("Transaction IDs copied.");
+      } catch (error) {
+        el("graphDetailIds").focus();
+        el("graphDetailIds").select();
+        toast("Transaction IDs selected. Press Cmd+C to copy.");
+      }
+    }
+
+    function showNodeDetail(nodeDatum) {
+      setGraphDetail("Node", nodeDatum.label, [
+        { label: "Rule connections", value: d3.format(",")(nodeDatum.degree) },
+        { label: "Combination count sum", value: d3.format(",")(nodeDatum.count) },
+        { label: "Node cost sum", value: formatCurrency(nodeDatum.costSum) },
+        { label: "Items", value: d3.format(",")(nodeDatum.items || 1) },
+        { label: "Transaction IDs", value: d3.format(",")([...nodeDatum.transactionIds].length) }
+      ], [...nodeDatum.transactionIds]);
+    }
+
+    function showLinkDetail(linkDatum) {
+      setGraphDetail("Rule", `${linkDatum.source.id} -> ${linkDatum.target.id}`, [
+        { label: "Confidence", value: linkDatum.confidence.toFixed(4) },
+        { label: "Lift", value: linkDatum.lift.toFixed(4) },
+        { label: "Combination count", value: d3.format(",")(linkDatum.count) },
+        { label: "Weighted cost", value: formatCurrency(linkDatum.cost) },
+        { label: "Combination", value: linkDatum.mat || "" },
+        { label: "Transaction IDs", value: d3.format(",")((linkDatum.transactionIds || []).length) }
+      ], linkDatum.transactionIds || []);
+    }
+
     async function buildRules(context, minConfidence) {
       const {
         frequentItemsets,
         supportMap,
         countMap,
         transactionSets,
+        transactionsWithIds,
         itemOrderMap,
         itemPriceMap
       } = context;
@@ -1793,6 +2002,7 @@
           const costConsequents = sumPrices(consequent, itemPriceMap, missingPrices);
           const costTotal = costAntecedents === null && costConsequents === null ? null : (costAntecedents || 0) + (costConsequents || 0);
           const conviction = confidence >= 1 ? Number.POSITIVE_INFINITY : (1 - supportC) / (1 - confidence);
+          const transactionIds = matchingTransactionIds(transactionsWithIds, unionItems);
 
           rules.push({
             antecedents: displaySet(antecedent),
@@ -1810,6 +2020,7 @@
             cost_total: costTotal,
             Mat_combination: matCombination,
             Mat_combination_items: unionItems.join(", "),
+            transaction_ids: transactionIds,
             unique_ID: "",
             "different items": unionItems.length
           });
@@ -1912,6 +2123,12 @@
       if (!transactions.length) {
         throw new Error("No transactions found after applying the filters.");
       }
+      const transactionsWithIds = [...grouped.entries()]
+        .map(([id, items]) => {
+          const uniqueItems = [...new Set(items.map(normalizeItem).filter(Boolean))];
+          return { id, items: uniqueItems, itemSet: new Set(uniqueItems) };
+        })
+        .filter(transaction => transaction.items.length);
 
       const itemPriceMap = new Map();
       for (const [item, prices] of priceBuckets) {
@@ -1924,6 +2141,7 @@
       return {
         headers,
         transactions,
+        transactionsWithIds,
         itemOrderMap,
         itemPriceMap,
         itemCount: new Set(transactions.flat()).size
@@ -1960,6 +2178,7 @@
 
         const { rules, missingPrices } = await buildRules({
           ...mined,
+          transactionsWithIds: preprocessed.transactionsWithIds,
           itemOrderMap: preprocessed.itemOrderMap,
           itemPriceMap: preprocessed.itemPriceMap
         }, minConfidence);
@@ -2324,6 +2543,7 @@
     function renderGraph() {
       const svg = d3.select("#ruleGraph");
       svg.selectAll("*").remove();
+      closeGraphDetail();
 
       const showConfidenceLabels = el("showConfidenceLabels").checked;
       const rules = currentGraphRules();
@@ -2353,10 +2573,10 @@
         const source = rule.antecedents;
         const target = rule.consequents;
         if (!nodeMap.has(source)) {
-          nodeMap.set(source, { id: source, label: source, count: 0, degree: 0, role: "antecedent", items: splitItems(source).length, costSum: 0, costKeys: new Set() });
+          nodeMap.set(source, { id: source, label: source, count: 0, degree: 0, role: "antecedent", items: splitItems(source).length, costSum: 0, costKeys: new Set(), transactionIds: new Set() });
         }
         if (!nodeMap.has(target)) {
-          nodeMap.set(target, { id: target, label: target, count: 0, degree: 0, role: "consequent", items: splitItems(target).length, costSum: 0, costKeys: new Set() });
+          nodeMap.set(target, { id: target, label: target, count: 0, degree: 0, role: "consequent", items: splitItems(target).length, costSum: 0, costKeys: new Set(), transactionIds: new Set() });
         }
         const sourceNode = nodeMap.get(source);
         const targetNode = nodeMap.get(target);
@@ -2372,6 +2592,8 @@
         targetNode.degree += 1;
         addNodeCost(sourceNode, combinationKey, antecedentCost);
         addNodeCost(targetNode, combinationKey, consequentCost);
+        mergeUniqueIds(sourceNode.transactionIds, rule.transaction_ids);
+        mergeUniqueIds(targetNode.transactionIds, rule.transaction_ids);
         links.push({
           source,
           target,
@@ -2379,6 +2601,7 @@
           lift: rule.lift,
           count: rule.combination_count || 0,
           cost: rule.cost_consequents_weighted || 0,
+          transactionIds: rule.transaction_ids || [],
           mat: rule.Mat_combination_items || rule.Mat_combination
         });
       }
@@ -2453,6 +2676,7 @@
         .attr("stroke", d => edgeColor(d.confidence))
         .attr("stroke-opacity", 0.66)
         .attr("stroke-width", d => linkWidth(d.count))
+        .attr("cursor", "pointer")
         .attr("marker-end", "url(#arrow)");
 
       const edgeLabel = edgeLabelLayer.selectAll("text")
@@ -2639,7 +2863,7 @@
           node.attr("opacity", n => n.id === d.id || links.some(link => (link.source.id === d.id && link.target.id === n.id) || (link.target.id === d.id && link.source.id === n.id)) ? 1 : 0.22);
           link.attr("stroke-opacity", link => link.source.id === d.id || link.target.id === d.id ? 0.95 : 0.10);
           edgeLabel.attr("opacity", link => link.source.id === d.id || link.target.id === d.id ? 1 : 0.16);
-          tooltip.classed("visible", true).html(`<strong>${d.label}</strong><br>Rule connections: ${d.degree}<br>Combination count sum: ${d.count}<br>Node cost sum: ${formatCurrency(d.costSum)}<br><span style="opacity:0.78">Costs counted once per visible combination.</span>`);
+          tooltip.classed("visible", true).html(`<strong>${d.label}</strong><br>Rule connections: ${d.degree}<br>Combination count sum: ${d.count}<br>Node cost sum: ${formatCurrency(d.costSum)}<br>Transaction IDs: ${formatTransactionIds([...d.transactionIds])}<br><span style="opacity:0.78">Costs counted once per visible combination.</span>`);
         })
         .on("mousemove", event => tooltip.style("left", `${event.clientX + 14}px`).style("top", `${event.clientY + 14}px`))
         .on("mouseleave", () => {
@@ -2654,16 +2878,21 @@
         })
         .on("click", (event, d) => {
           event.stopPropagation();
+          showNodeDetail(d);
           setGraphFocus(focusedNodeId === d.id ? null : d.id);
         });
 
       link
         .on("mouseenter", (event, d) => {
           if (focusedNodeId && !isConnectedToFocus(d)) return;
-          tooltip.classed("visible", true).html(`<strong>${d.source.id} -> ${d.target.id}</strong><br>Confidence: ${d.confidence.toFixed(4)}<br>Lift: ${d.lift.toFixed(4)}<br>Combination Count: ${d.count}<br>${d.mat}`);
+          tooltip.classed("visible", true).html(`<strong>${d.source.id} -> ${d.target.id}</strong><br>Confidence: ${d.confidence.toFixed(4)}<br>Lift: ${d.lift.toFixed(4)}<br>Combination Count: ${d.count}<br>Transaction IDs: ${formatTransactionIds(d.transactionIds)}<br>${d.mat}`);
         })
         .on("mousemove", event => tooltip.style("left", `${event.clientX + 14}px`).style("top", `${event.clientY + 14}px`))
-        .on("mouseleave", () => tooltip.classed("visible", false));
+        .on("mouseleave", () => tooltip.classed("visible", false))
+        .on("click", (event, d) => {
+          event.stopPropagation();
+          showLinkDetail(d);
+        });
 
       simulation.on("tick", () => {
         link.attr("d", d => {
@@ -2731,6 +2960,7 @@
         cost_consequents_weighted: rule.cost_consequents_weighted,
         Mat_combination: rule.Mat_combination,
         Mat_combination_items: rule.Mat_combination_items,
+        transaction_ids: rule.transaction_ids || [],
         unique_ID: rule.unique_ID
       };
     }
@@ -2883,6 +3113,8 @@
       el("fitGraphBtn").addEventListener("click", fitGraph);
       el("fullscreenGraphBtn").addEventListener("click", toggleGraphFullscreen);
       el("openGraphTabBtn").addEventListener("click", openGraphInNewTab);
+      el("graphDetailCloseBtn").addEventListener("click", closeGraphDetail);
+      el("graphDetailCopyBtn").addEventListener("click", copyGraphDetailIds);
       el("showConfidenceLabels").addEventListener("change", renderGraph);
       for (const id of ["graphLimit", "graphMinConfidence", "graphSearch"]) {
         el(id).addEventListener("input", () => {
@@ -2894,6 +3126,8 @@
         if (event.key === "Escape") {
           if (el("helpModal").classList.contains("open")) {
             closeHelp();
+          } else if (el("graphDetailPanel").classList.contains("open")) {
+            closeGraphDetail();
           } else if (el("graphCard").classList.contains("graph-fullscreen")) {
             toggleGraphFullscreen();
           }
