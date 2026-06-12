@@ -86,6 +86,24 @@ A single `state` object holds `workbookRows`, `headers`, `allRules`, `filteredRu
 and no reactive system — functions read from and mutate `state` directly, then call the
 relevant `render*` function.
 
+## In-app help (`helpTopics`)
+
+The Help modal (`#helpModal`) is data-driven by the **`helpTopics`** array near the top of
+the `<script>` block. Each entry is `{ id, title, html }`; `title` is rendered via
+`textContent` (use a plain `&`, not `&amp;`), while `html` is injected via `innerHTML`.
+`renderHelpTopics()` builds the topic nav and supports text search across title + stripped
+html; `showHelpTopic(id)` swaps the content.
+
+- The help content is intentionally **comprehensive and mirrors `README.md`**: overview,
+  quick start, input format, thresholds, filters, running, table/Top-20, graph, metrics,
+  output columns, presets, exports, architecture, persistence/privacy, browser
+  support/limits, the full **License & open-source** topic, and version/contact.
+- Help HTML may use `<table class="help-table">`, `<pre class="help-license">`, `<ul>/<ol>`,
+  `<code>`, and `<a target="_blank" rel="noopener noreferrer">`; all are styled in the help
+  CSS block. Keep help copy in **English**.
+- **When app behavior changes, update the matching help topic** (and usually `README.md`)
+  so the in-app docs stay accurate.
+
 ## Metrics (must match the Python reference)
 
 | Metric | Formula |
@@ -106,9 +124,13 @@ If you change any metric, keep it consistent with `AssociationRulesGUI.py`.
   `document.title`. The "Open-source software" help topic also reads `APP_VERSION`. Bump
   this single constant to release a new version.
 - The project is licensed under **GPL-3.0** (`LICENSE.txt`). `LICENSE.txt` also reproduces
-  the full third-party license texts: SheetJS (Apache-2.0), D3.js (ISC), and the UI fonts
-  (SIL OFL 1.1). When adding/removing a bundled component, update `LICENSE.txt`, the OSS
-  help topic, and the README third-party table together.
+  the full third-party license texts and attribution notices: SheetJS (Apache-2.0, banner
+  `/*! xlsx.js (C) 2013-present SheetJS ... */`), D3.js (ISC, banner `// https://d3js.org
+  v7.9.0 Copyright 2010-2023 Mike Bostock`), and the UI fonts (SIL OFL 1.1). Those in-file
+  banners must stay intact and the vendored files are used unmodified. The **License &
+  open-source** help topic mirrors these terms (including the full ISC text). When
+  adding/removing a bundled component, update `LICENSE.txt`, that help topic, and the
+  README third-party table together.
 
 ## Persistence (localStorage keys)
 
