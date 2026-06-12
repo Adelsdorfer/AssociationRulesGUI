@@ -10,20 +10,25 @@
     @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap");
 
     :root {
-      --ink: #17211f;
-      --muted: #60706d;
-      --paper: #f8f4e8;
-      --paper-strong: #fffaf0;
-      --line: rgba(23, 33, 31, 0.14);
-      --line-strong: rgba(23, 33, 31, 0.24);
-      --pine: #1f4d3a;
-      --moss: #587b3a;
-      --saffron: #e4a72f;
-      --clay: #c95f3f;
-      --blue: #256d85;
-      --graph-bg: #111d1a;
-      --graph-panel: rgba(255, 250, 240, 0.88);
-      --shadow: 0 24px 70px rgba(23, 33, 31, 0.16);
+      color-scheme: dark;
+      --ink: #eaeefb;
+      --muted: #97a1c2;
+      --paper: #0e1424;
+      --paper-strong: #141c30;
+      --line: rgba(255, 255, 255, 0.10);
+      --line-strong: rgba(255, 255, 255, 0.20);
+      --pine: #8b7bff;
+      --moss: #22d3ee;
+      --saffron: #f4c869;
+      --clay: #ff6bb3;
+      --blue: #6ea8ff;
+      --graph-bg: #060912;
+      --graph-panel: rgba(15, 21, 38, 0.88);
+      --shadow: 0 24px 70px rgba(2, 4, 12, 0.55);
+      --glow: 0 0 26px rgba(139, 123, 255, 0.42);
+      --bg: #060912;
+      --surface: rgba(255, 255, 255, 0.045);
+      --surface-strong: rgba(255, 255, 255, 0.08);
       --radius-lg: 28px;
       --radius-md: 18px;
       --radius-sm: 12px;
@@ -36,17 +41,86 @@
     html {
       min-height: 100%;
       background:
-        radial-gradient(circle at 8% 12%, rgba(228, 167, 47, 0.30), transparent 28rem),
-        radial-gradient(circle at 88% 6%, rgba(37, 109, 133, 0.22), transparent 26rem),
-        linear-gradient(135deg, #f7ecd2 0%, #f8f4e8 43%, #e8efe3 100%);
+        radial-gradient(circle at 12% 12%, rgba(124, 92, 255, 0.22), transparent 30rem),
+        radial-gradient(circle at 88% 8%, rgba(34, 211, 238, 0.16), transparent 28rem),
+        radial-gradient(circle at 72% 102%, rgba(255, 107, 179, 0.14), transparent 32rem),
+        linear-gradient(160deg, #070b18 0%, #060912 46%, #04060f 100%);
+      background-attachment: fixed;
     }
 
     body {
+      position: relative;
       min-height: 100vh;
       margin: 0;
       color: var(--ink);
       font-family: "Source Sans 3", "Trebuchet MS", sans-serif;
       font-size: 16px;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 24px 36px, rgba(255, 255, 255, 0.92), transparent),
+        radial-gradient(1px 1px at 132px 88px, rgba(196, 214, 255, 0.78), transparent),
+        radial-gradient(1.6px 1.6px at 208px 168px, rgba(255, 255, 255, 0.85), transparent),
+        radial-gradient(1px 1px at 320px 248px, rgba(255, 244, 214, 0.72), transparent),
+        radial-gradient(1.4px 1.4px at 408px 64px, rgba(180, 206, 255, 0.80), transparent),
+        radial-gradient(1px 1px at 96px 320px, rgba(255, 255, 255, 0.65), transparent),
+        radial-gradient(1.2px 1.2px at 360px 380px, rgba(214, 196, 255, 0.78), transparent);
+      background-repeat: repeat;
+      background-size: 460px 460px;
+      opacity: 0.6;
+      animation: twinkle 7.5s ease-in-out infinite alternate;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.42; }
+      to { opacity: 0.72; }
+    }
+
+    ::selection {
+      background: rgba(139, 123, 255, 0.40);
+      color: #fff;
+    }
+
+    ::placeholder {
+      color: rgba(151, 161, 194, 0.65);
+    }
+
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: rgba(139, 123, 255, 0.45) transparent;
+    }
+
+    ::-webkit-scrollbar {
+      width: 11px;
+      height: 11px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border: 3px solid transparent;
+      border-radius: 999px;
+      background: rgba(139, 123, 255, 0.40);
+      background-clip: content-box;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(139, 123, 255, 0.62);
+      background-clip: content-box;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body::before {
+        animation: none;
+      }
     }
 
     button,
@@ -79,8 +153,8 @@
 
     .sidebar,
     .workspace {
-      border: 1px solid rgba(255, 255, 255, 0.52);
-      background: rgba(255, 250, 240, 0.74);
+      border: 1px solid var(--line);
+      background: var(--surface);
       box-shadow: var(--shadow);
       backdrop-filter: blur(18px);
     }
@@ -104,7 +178,7 @@
       border: 1px solid var(--line-strong);
       border-radius: 999px;
       color: var(--ink);
-      background: rgba(255, 255, 255, 0.70);
+      background: var(--surface-strong);
       font-weight: 900;
     }
 
@@ -131,7 +205,7 @@
 
     .workspace {
       display: grid;
-      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      grid-template-rows: auto auto minmax(0, 1fr);
       min-width: 0;
       border-radius: var(--radius-lg);
       overflow: hidden;
@@ -176,7 +250,7 @@
       padding: 16px;
       border: 1px solid var(--line);
       border-radius: var(--radius-md);
-      background: rgba(255, 255, 255, 0.52);
+      background: var(--surface);
     }
 
     .section h2 {
@@ -197,7 +271,7 @@
       border: 1px solid var(--line);
       border-radius: 999px;
       color: var(--muted);
-      background: rgba(255, 255, 255, 0.52);
+      background: var(--surface-strong);
       font-size: 12px;
       font-weight: 700;
       letter-spacing: 0.02em;
@@ -216,7 +290,7 @@
     }
 
     label {
-      color: #34413f;
+      color: #c2cae6;
       font-size: 13px;
       font-weight: 700;
     }
@@ -236,7 +310,7 @@
       min-height: 42px;
       border: 1px solid var(--line-strong);
       border-radius: var(--radius-sm);
-      background: rgba(255, 255, 255, 0.78);
+      background: rgba(255, 255, 255, 0.06);
       color: var(--ink);
       outline: none;
       padding: 9px 11px;
@@ -249,9 +323,9 @@
 
     input:focus,
     select:focus {
-      border-color: rgba(31, 77, 58, 0.72);
-      box-shadow: 0 0 0 4px rgba(31, 77, 58, 0.12);
-      background: #fffdf7;
+      border-color: rgba(139, 123, 255, 0.75);
+      box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.20);
+      background: rgba(255, 255, 255, 0.09);
     }
 
     .check {
@@ -259,7 +333,7 @@
       align-items: center;
       gap: 9px;
       min-height: 34px;
-      color: #34413f;
+      color: #c2cae6;
       font-weight: 650;
     }
 
@@ -302,77 +376,86 @@
     }
 
     .btn-primary {
-      color: #fffdf7;
-      background: linear-gradient(135deg, var(--pine), #123326);
-      box-shadow: 0 14px 30px rgba(31, 77, 58, 0.24);
+      color: #f7f8ff;
+      background: linear-gradient(135deg, var(--pine), #4c2fd6);
+      box-shadow: 0 14px 30px rgba(76, 47, 214, 0.40), 0 0 22px rgba(139, 123, 255, 0.35);
     }
 
     .btn-secondary {
       color: var(--ink);
       border: 1px solid var(--line-strong);
-      background: rgba(255, 255, 255, 0.68);
+      background: var(--surface-strong);
     }
 
     .btn-warm {
-      color: #22180a;
-      background: linear-gradient(135deg, #f0c964, var(--saffron));
-      box-shadow: 0 14px 28px rgba(228, 167, 47, 0.22);
+      color: #1a1304;
+      background: linear-gradient(135deg, #ffd97a, var(--saffron));
+      box-shadow: 0 14px 28px rgba(244, 200, 105, 0.30), 0 0 18px rgba(244, 200, 105, 0.22);
     }
 
     .topbar {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto;
-      gap: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 18px;
       align-items: center;
-      padding: 22px 24px 16px;
+      padding: 18px 24px;
       border-bottom: 1px solid var(--line);
       background:
-        linear-gradient(90deg, rgba(255, 250, 240, 0.92), rgba(255, 255, 255, 0.46)),
-        radial-gradient(circle at 24% -40%, rgba(228, 167, 47, 0.30), transparent 18rem);
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)),
+        radial-gradient(circle at 24% -40%, rgba(124, 92, 255, 0.24), transparent 18rem);
+    }
+
+    .topbar-title {
+      min-width: 0;
+    }
+
+    .topbar-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .stat-chip {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 7px;
+      padding: 5px 12px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--surface-strong);
+      white-space: nowrap;
+    }
+
+    .stat-chip > span {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .stat-chip > strong {
+      font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+      font-size: 16px;
+      letter-spacing: -0.02em;
     }
 
     .topbar-actions {
       display: inline-flex;
       align-items: center;
       gap: 10px;
+      margin-left: auto;
+    }
+
+    .pill.is-ready {
+      border-color: rgba(74, 222, 128, 0.45);
+      color: #86efac;
+      background: rgba(34, 197, 94, 0.16);
     }
 
     .topbar h2 {
       font-size: clamp(22px, 2.8vw, 34px);
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(120px, 1fr));
-      gap: 10px;
-      padding: 14px 24px;
-      border-bottom: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.38);
-    }
-
-    .stat {
-      min-height: 76px;
-      padding: 13px;
-      border: 1px solid var(--line);
-      border-radius: var(--radius-md);
-      background: rgba(255, 250, 240, 0.70);
-    }
-
-    .stat span {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    .stat strong {
-      display: block;
-      margin-top: 6px;
-      font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
-      font-size: 25px;
-      letter-spacing: -0.04em;
     }
 
     .tabs {
@@ -381,7 +464,7 @@
       gap: 8px;
       padding: 14px 24px 0;
       border-bottom: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.02);
     }
 
     .tab {
@@ -390,11 +473,11 @@
       margin: 0;
       min-height: 38px;
       padding: 8px 14px;
-      border: 1px solid rgba(80, 98, 93, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.10);
       border-bottom: 0;
       border-radius: 12px 12px 0 0;
       color: var(--muted);
-      background: rgba(255, 255, 255, 0.34);
+      background: rgba(255, 255, 255, 0.03);
       font-weight: 800;
       line-height: 1.1;
       box-shadow: none;
@@ -403,14 +486,14 @@
 
     .tab.active {
       border-color: var(--line-strong);
-      border-bottom-color: rgba(255, 250, 240, 0.86);
+      border-bottom-color: transparent;
       color: var(--ink);
-      background: rgba(255, 250, 240, 0.86);
-      box-shadow: 0 10px 24px rgba(23, 33, 31, 0.08);
+      background: rgba(255, 255, 255, 0.07);
+      box-shadow: 0 10px 24px rgba(2, 4, 12, 0.35);
     }
 
     .tab:focus-visible {
-      box-shadow: 0 0 0 3px rgba(31, 77, 58, 0.16);
+      box-shadow: 0 0 0 3px rgba(139, 123, 255, 0.35);
     }
 
     .panel {
@@ -448,8 +531,8 @@
       padding: 7px 10px;
       border: 1px solid var(--line);
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.58);
-      color: #34413f;
+      background: var(--surface-strong);
+      color: #c2cae6;
       font-size: 13px;
       font-weight: 700;
     }
@@ -461,7 +544,7 @@
       max-height: calc(100vh - 360px);
       border: 1px solid var(--line);
       border-radius: var(--radius-md);
-      background: rgba(255, 255, 255, 0.66);
+      background: var(--surface);
     }
 
     table {
@@ -478,8 +561,8 @@
       z-index: 2;
       padding: 11px 12px;
       border-bottom: 1px solid var(--line-strong);
-      background: #f0ead9;
-      color: #2b3532;
+      background: #141c30;
+      color: #d6dcf2;
       text-align: left;
       white-space: nowrap;
       cursor: pointer;
@@ -488,16 +571,16 @@
 
     tbody td {
       padding: 9px 12px;
-      border-bottom: 1px solid rgba(23, 33, 31, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
       vertical-align: top;
     }
 
     tbody tr:nth-child(even) {
-      background: rgba(232, 239, 227, 0.42);
+      background: rgba(255, 255, 255, 0.03);
     }
 
     tbody tr:hover {
-      background: rgba(228, 167, 47, 0.14);
+      background: rgba(139, 123, 255, 0.16);
     }
 
     .number {
@@ -523,7 +606,7 @@
       min-width: 0;
       border: 1px solid var(--line);
       border-radius: var(--radius-lg);
-      background: rgba(255, 255, 255, 0.58);
+      background: var(--surface);
       overflow: hidden;
     }
 
@@ -550,10 +633,11 @@
       position: relative;
       min-height: 680px;
       background:
-        radial-gradient(circle at 18% 18%, rgba(228, 167, 47, 0.30), transparent 16rem),
-        radial-gradient(circle at 90% 12%, rgba(126, 155, 180, 0.32), transparent 20rem),
-        linear-gradient(145deg, #283732 0%, #3a4a45 45%, #4f6159 100%);
-      color: #f8f4e8;
+        radial-gradient(circle at 18% 18%, rgba(124, 92, 255, 0.30), transparent 16rem),
+        radial-gradient(circle at 90% 12%, rgba(34, 211, 238, 0.22), transparent 20rem),
+        radial-gradient(circle at 60% 112%, rgba(255, 107, 179, 0.18), transparent 22rem),
+        linear-gradient(150deg, #0a0f20 0%, #0b1226 48%, #070b18 100%);
+      color: #eaeefb;
     }
 
     .graph-card.graph-fullscreen {
@@ -574,7 +658,7 @@
       position: relative;
       z-index: 3;
       border-color: rgba(255, 250, 240, 0.12);
-      background: rgba(13, 23, 21, 0.40);
+      background: rgba(6, 9, 18, 0.45);
       backdrop-filter: blur(12px);
     }
 
@@ -649,8 +733,8 @@
     }
 
     .graph-controls input {
-      border-color: rgba(255, 250, 240, 0.22);
-      background: rgba(255, 250, 240, 0.92);
+      border-color: rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.08);
     }
 
     #ruleGraph {
@@ -686,8 +770,8 @@
       border: 1px solid rgba(255, 250, 240, 0.18);
       border-radius: 14px;
       color: rgba(255, 250, 240, 0.92);
-      background: rgba(13, 23, 21, 0.88);
-      box-shadow: 0 22px 58px rgba(0, 0, 0, 0.34);
+      background: rgba(10, 15, 32, 0.92);
+      box-shadow: 0 22px 58px rgba(0, 0, 0, 0.45);
       backdrop-filter: blur(14px);
     }
 
@@ -783,7 +867,7 @@
     }
 
     body.graph-only {
-      background: #283732;
+      background: var(--bg);
       overflow: hidden;
     }
 
@@ -856,8 +940,8 @@
       border: 1px solid rgba(255, 250, 240, 0.18);
       border-radius: 14px;
       color: #fffaf0;
-      background: rgba(13, 23, 21, 0.92);
-      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+      background: rgba(10, 15, 32, 0.94);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
       opacity: 0;
       transform: translateY(6px);
       transition: opacity 120ms ease, transform 120ms ease;
@@ -880,7 +964,7 @@
       border: 1px solid var(--line);
       border-radius: var(--radius-md);
       color: #e6eee8;
-      background: #0e1715;
+      background: #0a0f1e;
       font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
       white-space: pre-wrap;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
@@ -899,8 +983,8 @@
       padding: 14px 16px;
       border-radius: 18px;
       color: #fffaf0;
-      background: rgba(13, 23, 21, 0.92);
-      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.24);
+      background: rgba(10, 15, 32, 0.94);
+      box-shadow: 0 22px 60px rgba(0, 0, 0, 0.4);
       opacity: 0;
       transform: translateY(12px);
       transition: opacity 160ms ease, transform 160ms ease;
@@ -925,7 +1009,7 @@
     .help-backdrop {
       position: absolute;
       inset: 0;
-      background: rgba(17, 24, 23, 0.42);
+      background: rgba(2, 4, 12, 0.55);
       backdrop-filter: blur(8px);
     }
 
@@ -936,10 +1020,10 @@
       grid-template-rows: auto minmax(0, 1fr);
       max-width: 1180px;
       margin: 0 auto;
-      border: 1px solid rgba(255, 255, 255, 0.52);
+      border: 1px solid var(--line);
       border-radius: var(--radius-lg);
-      background: rgba(255, 250, 240, 0.96);
-      box-shadow: 0 30px 90px rgba(23, 33, 31, 0.24);
+      background: rgba(14, 19, 36, 0.97);
+      box-shadow: 0 30px 90px rgba(2, 4, 12, 0.6);
       overflow: hidden;
     }
 
@@ -966,7 +1050,7 @@
       overflow: auto;
       padding: 14px;
       border-right: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.38);
+      background: rgba(255, 255, 255, 0.03);
     }
 
     .help-topic {
@@ -983,7 +1067,7 @@
 
     .help-topic.active,
     .help-topic:hover {
-      background: rgba(31, 77, 58, 0.10);
+      background: rgba(139, 123, 255, 0.16);
     }
 
     .help-content {
@@ -1006,7 +1090,7 @@
 
     .help-content p {
       margin: 0 0 10px;
-      color: #34413f;
+      color: #c2cae6;
     }
 
     .spinner {
@@ -1193,22 +1277,21 @@
 
     <section class="workspace">
       <header class="topbar">
-        <div>
+        <div class="topbar-title">
           <p class="eyebrow">Results</p>
           <h2 id="datasetTitle">No analysis loaded yet</h2>
         </div>
+        <div class="topbar-stats" id="topbarStats">
+          <span class="stat-chip"><span>Transactions</span><strong id="statTransactions">0</strong></span>
+          <span class="stat-chip"><span>Items</span><strong id="statItems">0</strong></span>
+          <span class="stat-chip"><span>Rules</span><strong id="statRules">0</strong></span>
+          <span class="stat-chip"><span>Visible</span><strong id="statVisible">0</strong></span>
+        </div>
         <div class="topbar-actions">
+          <span class="pill is-ready" id="runtimeStatus">ready</span>
           <button class="btn btn-secondary" id="helpOpenBtn" type="button">Help</button>
-          <span class="pill" id="runtimeStatus">ready</span>
         </div>
       </header>
-
-      <section class="stats">
-        <div class="stat"><span>Transactions</span><strong id="statTransactions">0</strong></div>
-        <div class="stat"><span>Items</span><strong id="statItems">0</strong></div>
-        <div class="stat"><span>Rules</span><strong id="statRules">0</strong></div>
-        <div class="stat"><span>Visible</span><strong id="statVisible">0</strong></div>
-      </section>
 
       <nav class="tabs" aria-label="Views">
         <button class="tab" data-tab="consolePanel">Console</button>
@@ -1256,6 +1339,7 @@
                 </label>
                 <button class="btn-graph" id="fullscreenGraphBtn" type="button">Fullscreen</button>
                 <button class="btn-graph" id="openGraphTabBtn" type="button" disabled>New tab</button>
+                <button class="btn-graph" id="exportGraphPngBtn" type="button" disabled>Export PNG</button>
                 <span class="pill" id="graphStatus">empty</span>
               </div>
             </div>
@@ -1470,7 +1554,9 @@
       const runBtn = el("runBtn");
       runBtn.disabled = isBusy;
       runBtn.innerHTML = isBusy ? `<span class="spinner"></span>working...` : "Run analysis";
-      el("runtimeStatus").textContent = text;
+      const status = el("runtimeStatus");
+      status.textContent = text;
+      status.classList.toggle("is-ready", !isBusy && text === "ready");
     }
 
     function parseTerms(value) {
@@ -2160,6 +2246,11 @@
         if (!(minSupport > 0 && minSupport <= 1)) throw new Error("Min support must be between 0 and 1.");
         if (!(minConfidence > 0 && minConfidence <= 1)) throw new Error("Min confidence must be between 0 and 1.");
 
+        const includeTermCount = parseTerms(el("includeTerms").value).length;
+        if (includeTermCount === 1) {
+          throw new Error("Please enter at least two items separated by a comma in the include items field.");
+        }
+
         setBusy(true, "analyzing");
         el("logBox").textContent = "";
         await new Promise(resolve => setTimeout(resolve, 30));
@@ -2204,6 +2295,12 @@
         updateAfterRules();
         log("Done.");
         toast(`Analysis completed: ${rules.length} rules found.`);
+        window.clearTimeout(window._autoCollapseTimer);
+        window._autoCollapseTimer = window.setTimeout(() => {
+          if (!document.body.classList.contains("sidebar-collapsed")) {
+            setSidebarCollapsed(true);
+          }
+        }, 3000);
       } catch (error) {
         console.error(error);
         log(`ERROR: ${error.message}`);
@@ -2322,7 +2419,7 @@
       el("statVisible").textContent = d3.format(",")(state.visibleRules.length || 0);
       el("datasetTitle").textContent = state.sourceName ? state.sourceName : "No analysis loaded yet";
       const hasRules = state.allRules.length > 0;
-      for (const id of ["downloadAllBtn", "resetFiltersBtn", "renderGraphBtn", "fitGraphBtn", "openGraphTabBtn"]) {
+      for (const id of ["downloadAllBtn", "resetFiltersBtn", "renderGraphBtn", "fitGraphBtn", "openGraphTabBtn", "exportGraphPngBtn"]) {
         el(id).disabled = !hasRules;
       }
     }
@@ -2392,7 +2489,7 @@
           .attr("x", width / 2)
           .attr("y", height / 2)
           .attr("text-anchor", "middle")
-          .attr("fill", "#60706d")
+          .attr("fill", "#97a1c2")
           .attr("font-weight", 800)
           .text("No Top 20 data available.");
         return;
@@ -2413,7 +2510,7 @@
       el("topChartStatus").textContent = `${grouped.length} bars`;
       const width = svg.node().clientWidth || 600;
       const height = svg.node().clientHeight || 620;
-      const margin = { top: 22, right: 28, bottom: 42, left: 190 };
+      const margin = { top: 22, right: 28, bottom: 42, left: 224 };
       const x = d3.scaleLinear()
         .domain([0, d3.max(grouped, d => d.total) || 1])
         .nice()
@@ -2428,19 +2525,19 @@
         .attr("transform", `translate(0,${height - margin.bottom})`)
         .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".2s")))
         .call(g => g.select(".domain").remove())
-        .call(g => g.selectAll("line").attr("stroke", "rgba(23,33,31,0.18)"))
-        .call(g => g.selectAll("text").attr("fill", "#60706d").attr("font-weight", 700));
+        .call(g => g.selectAll("line").attr("stroke", "rgba(255,255,255,0.14)"))
+        .call(g => g.selectAll("text").attr("fill", "#97a1c2").attr("font-weight", 700));
 
       const yAxis = svg.append("g")
         .attr("transform", `translate(${margin.left},0)`)
         .call(d3.axisLeft(y).tickFormat(id => {
           const row = grouped.find(d => d.id === id);
           const label = `${row.label} (${id})`;
-          return label.length > 38 ? `${label.slice(0, 35)}...` : label;
+          return label.length > 32 ? `${label.slice(0, 29)}...` : label;
         }))
         .call(g => g.select(".domain").remove())
         .call(g => g.selectAll("line").remove())
-        .call(g => g.selectAll("text").attr("fill", "#34413f").attr("font-weight", 700));
+        .call(g => g.selectAll("text").attr("fill", "#c2cae6").attr("font-size", 11).attr("font-weight", 700));
 
       yAxis.selectAll("text")
         .attr("cursor", "pointer")
@@ -2455,8 +2552,8 @@
         .attr("id", "barGradient")
         .attr("x1", "0%")
         .attr("x2", "100%");
-      gradient.append("stop").attr("offset", "0%").attr("stop-color", "#1f4d3a");
-      gradient.append("stop").attr("offset", "100%").attr("stop-color", "#e4a72f");
+      gradient.append("stop").attr("offset", "0%").attr("stop-color", "#8b7bff");
+      gradient.append("stop").attr("offset", "100%").attr("stop-color", "#22d3ee");
 
       const bars = svg.append("g")
         .selectAll("rect")
@@ -2486,7 +2583,7 @@
         .attr("x", d => x(d.total) + 8)
         .attr("y", d => y(d.id) + y.bandwidth() / 2)
         .attr("dy", "0.35em")
-        .attr("fill", "#17211f")
+        .attr("fill", "#eaeefb")
         .attr("font-weight", 800)
         .attr("font-size", 12)
         .attr("cursor", "pointer")
@@ -2622,7 +2719,7 @@
       const linkWidth = d3.scaleSqrt()
         .domain(d3.extent(links, d => d.count))
         .range([1.1, 4.2]);
-      const edgeColor = d3.scaleSequential(d3.interpolateYlOrBr)
+      const edgeColor = d3.scaleSequential(d3.piecewise(d3.interpolateRgb.gamma(2.2), ["#22d3ee", "#8b7bff", "#ff6bb3"]))
         .domain([d3.min(links, d => d.confidence) || 0, d3.max(links, d => d.confidence) || 1]);
 
       const defs = svg.append("defs");
@@ -2684,7 +2781,7 @@
         .join("text")
         .attr("fill", "rgba(255,250,240,0.92)")
         .attr("paint-order", "stroke")
-        .attr("stroke", "rgba(13,23,21,0.86)")
+        .attr("stroke", "rgba(6,9,18,0.86)")
         .attr("stroke-width", 5)
         .attr("font-size", 11)
         .attr("font-weight", 900)
@@ -2708,7 +2805,7 @@
           group.append("circle")
             .attr("class", "node-part")
             .attr("r", radius(d.count))
-            .attr("fill", "#77a889")
+            .attr("fill", "#8b7bff")
             .attr("stroke", "rgba(255,250,240,0.82)")
             .attr("stroke-width", 1.6);
           return;
@@ -2731,7 +2828,7 @@
         .join("text")
         .attr("fill", "rgba(255,250,240,0.88)")
         .attr("paint-order", "stroke")
-        .attr("stroke", "rgba(13,23,21,0.78)")
+        .attr("stroke", "rgba(6,9,18,0.78)")
         .attr("stroke-width", 5)
         .attr("font-size", d => d.degree > 2 ? 12 : 10)
         .attr("font-weight", 800)
@@ -2763,13 +2860,13 @@
         const dotRadius = compoundDotRadius(nodeDatum);
         if (itemCount === 2) {
           return [
-            { x: -dotRadius, y: 0, r: dotRadius, fill: "#e4a72f" },
-            { x: dotRadius, y: 0, r: dotRadius, fill: "#f0c964" }
+            { x: -dotRadius, y: 0, r: dotRadius, fill: "#22d3ee" },
+            { x: dotRadius, y: 0, r: dotRadius, fill: "#8b7bff" }
           ];
         }
 
         const ringRadius = compoundRingRadius(nodeDatum);
-        const palette = ["#e4a72f", "#f0c964", "#c88b2e", "#77a889", "#9ebc9f", "#4c8796"];
+        const palette = ["#8b7bff", "#22d3ee", "#ff6bb3", "#f4c869", "#6ea8ff", "#42e8c0"];
         return Array.from({ length: itemCount }, (_, index) => {
           const angle = (-Math.PI / 2) + (index / itemCount) * Math.PI * 2;
           return {
@@ -2936,6 +3033,71 @@
       if (!state.graphZoom) return;
       const { svg, zoom, width, height } = state.graphZoom;
       svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity.translate(width * 0.04, height * 0.03).scale(0.92));
+    }
+
+    function graphPngFilename() {
+      const search = el("graphSearch").value.trim();
+      const numberMatch = search.match(/\d+/);
+      const prefix = numberMatch ? `${numberMatch[0]}_` : "";
+      return `${prefix}rule-graph.png`;
+    }
+
+    function exportGraphPng() {
+      const svgNode = el("ruleGraph");
+      if (!currentGraphRules().length) {
+        toast("No graph available to export.");
+        return;
+      }
+
+      const viewBox = (svgNode.getAttribute("viewBox") || "").split(/\s+/).map(Number);
+      const baseWidth = viewBox.length === 4 && viewBox[2] ? viewBox[2] : (svgNode.clientWidth || 900);
+      const baseHeight = viewBox.length === 4 && viewBox[3] ? viewBox[3] : (svgNode.clientHeight || 680);
+      const scale = Math.min(3, Math.max(2, window.devicePixelRatio || 1) * 1.5);
+      const outWidth = Math.round(baseWidth * scale);
+      const outHeight = Math.round(baseHeight * scale);
+
+      const clone = svgNode.cloneNode(true);
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      clone.setAttribute("width", baseWidth);
+      clone.setAttribute("height", baseHeight);
+      clone.style.fontFamily = '"Source Sans 3", "Trebuchet MS", sans-serif';
+
+      const svgString = new XMLSerializer().serializeToString(clone);
+      const svgUrl = URL.createObjectURL(new Blob([svgString], { type: "image/svg+xml;charset=utf-8" }));
+      const image = new Image();
+
+      image.onload = () => {
+        URL.revokeObjectURL(svgUrl);
+        const canvas = document.createElement("canvas");
+        canvas.width = outWidth;
+        canvas.height = outHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#060912";
+        ctx.fillRect(0, 0, outWidth, outHeight);
+        ctx.drawImage(image, 0, 0, outWidth, outHeight);
+        canvas.toBlob(blob => {
+          if (!blob) {
+            toast("PNG export failed.");
+            return;
+          }
+          const link = document.createElement("a");
+          const blobUrl = URL.createObjectURL(blob);
+          link.href = blobUrl;
+          link.download = graphPngFilename();
+          document.body.append(link);
+          link.click();
+          link.remove();
+          URL.revokeObjectURL(blobUrl);
+          toast(`Graph exported as ${link.download}`);
+        }, "image/png");
+      };
+
+      image.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+        toast("Graph could not be rendered to PNG.");
+      };
+
+      image.src = svgUrl;
     }
 
     function toggleGraphFullscreen() {
@@ -3113,6 +3275,7 @@
       el("fitGraphBtn").addEventListener("click", fitGraph);
       el("fullscreenGraphBtn").addEventListener("click", toggleGraphFullscreen);
       el("openGraphTabBtn").addEventListener("click", openGraphInNewTab);
+      el("exportGraphPngBtn").addEventListener("click", exportGraphPng);
       el("graphDetailCloseBtn").addEventListener("click", closeGraphDetail);
       el("graphDetailCopyBtn").addEventListener("click", copyGraphDetailIds);
       el("showConfidenceLabels").addEventListener("change", renderGraph);
