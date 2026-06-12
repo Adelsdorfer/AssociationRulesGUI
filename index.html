@@ -1063,7 +1063,7 @@
       inset: 28px;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr);
-      max-width: 1180px;
+      max-width: 1480px;
       margin: 0 auto;
       border: 1px solid var(--line);
       border-radius: var(--radius-lg);
@@ -1174,6 +1174,7 @@
       width: 100%;
       margin: 4px 0 16px;
       border-collapse: collapse;
+      table-layout: fixed;
       font-size: 13px;
     }
 
@@ -1184,6 +1185,8 @@
       text-align: left;
       vertical-align: top;
       color: #c2cae6;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .help-table th {
@@ -1198,7 +1201,9 @@
     }
 
     .help-table code {
-      white-space: nowrap;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .help-license {

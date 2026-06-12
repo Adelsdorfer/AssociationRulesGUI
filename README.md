@@ -348,7 +348,7 @@ flowchart LR
 ├── WebVersion.7z              # Archived snapshot of the web version
 ├── AGENTS.md                  # Guidance for AI agents / contributors
 ├── DESIGN.md                  # Design-system documentation
-├── LICENSE.txt                # GNU GPL v3.0 license text
+├── LICENSE                    # GNU GPL v3.0 license text
 └── README.md                  # This file
 ```
 
@@ -469,7 +469,7 @@ Issues and pull requests are welcome. Please:
 
 This app bundles the following open-source libraries. The full copyright notices and the
 complete license texts of each component are reproduced in
-[LICENSE.txt](LICENSE.txt).
+[LICENSE](LICENSE).
 
 | Component | Used for | Copyright | License |
 | --- | --- | --- | --- |
@@ -485,7 +485,7 @@ itemset generation, and rule generation are implemented directly in `index.html`
 ## License
 
 Association Rules Studio **version 1.0** is licensed under the **GNU General Public
-License v3.0** (GPL-3.0). See the full text in [LICENSE.txt](LICENSE.txt) or on
+License v3.0** (GPL-3.0). See the full text in [LICENSE](LICENSE) or on
 [GitHub](https://github.com/Adelsdorfer/AssociationRulesGUI/blob/main/LICENSE).
 
 In short, the GPL-3.0 is a copyleft license: you are free to use, study, modify, and
@@ -497,11 +497,11 @@ redistribute this software, including for commercial purposes, **provided that**
 - mark any modified versions as changed.
 
 The software is provided **without any warranty**, to the extent permitted by law. This
-summary is informational only — the [LICENSE.txt](LICENSE.txt) text is authoritative.
+summary is informational only — the [LICENSE](LICENSE) text is authoritative.
 
 > Note: the bundled third-party libraries (SheetJS, D3.js) and the bundled fonts are
 > distributed under their own licenses, whose full texts are included in
-> [LICENSE.txt](LICENSE.txt); see also [Third-party software](#third-party-software).
+> [LICENSE](LICENSE); see also [Third-party software](#third-party-software).
 
 ---
 
