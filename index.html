@@ -224,6 +224,42 @@
       letter-spacing: 0.04em;
     }
 
+    .brand-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .brand-meta .version-pill {
+      margin-top: 0;
+    }
+
+    .github-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-color: var(--line-strong);
+      color: var(--ink);
+      background: var(--surface-strong);
+      font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+      letter-spacing: 0.04em;
+      text-decoration: none;
+      transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+    }
+
+    .github-pill svg {
+      display: block;
+    }
+
+    .github-pill:hover,
+    .github-pill:focus-visible {
+      border-color: rgba(139, 123, 255, 0.55);
+      color: #c9c2ff;
+      background: rgba(139, 123, 255, 0.14);
+    }
+
     .eyebrow {
       margin: 0 0 8px;
       color: var(--moss);
@@ -1102,6 +1138,83 @@
       color: #c2cae6;
     }
 
+    .help-content ul,
+    .help-content ol {
+      margin: 0 0 12px;
+      padding-left: 22px;
+      color: #c2cae6;
+      line-height: 1.5;
+    }
+
+    .help-content li {
+      margin-bottom: 6px;
+    }
+
+    .help-content a {
+      color: var(--moss);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(34, 211, 238, 0.4);
+    }
+
+    .help-content a:hover,
+    .help-content a:focus-visible {
+      color: #6fe6f7;
+    }
+
+    .help-content code {
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #d7defb;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.86em;
+    }
+
+    .help-table {
+      width: 100%;
+      margin: 4px 0 16px;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .help-table th,
+    .help-table td {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+      color: #c2cae6;
+    }
+
+    .help-table th {
+      background: rgba(139, 123, 255, 0.14);
+      color: var(--ink);
+      font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+      font-weight: 700;
+    }
+
+    .help-table tbody tr:nth-child(even) td {
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .help-table code {
+      white-space: nowrap;
+    }
+
+    .help-license {
+      margin: 4px 0 16px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: #0a0f1e;
+      color: #b7c0e0;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
     .spinner {
       display: inline-block;
       width: 16px;
@@ -1199,7 +1312,13 @@
       <div class="brand">
         <p class="eyebrow">Apriori Workbench</p>
         <h1>Association Rules Studio</h1>
-        <span class="pill version-pill" id="appVersion">v1.0</span>
+        <div class="brand-meta">
+          <span class="pill version-pill" id="appVersion">v1.0</span>
+          <a class="pill github-pill" id="githubLink" href="https://github.com/Adelsdorfer/AssociationRulesGUI/tree/main" target="_blank" rel="noopener noreferrer" title="View the project on GitHub">
+            <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg>
+            <span>GitHub</span>
+          </a>
+        </div>
       </div>
 
       <section class="section">
@@ -1421,33 +1540,128 @@
 
     const helpTopics = [
       {
-        id: "workflow",
-        title: "Workflow",
+        id: "overview",
+        title: "Overview",
         html: `
-          <h3>Workflow</h3>
-          <p>Load an Excel file, check the detected columns in the log, choose support and confidence thresholds, then run the analysis.</p>
-          <p>The table shows the generated association rules. Use text filters and quick search to narrow the results, then export the full rule set.</p>
-          <p>The graph view visualizes rules as directed links from antecedents to consequents. Edge color follows confidence, edge width follows combination count, and node size follows how often a node appears in visible rules.</p>
+          <h3>Association Rules Studio</h3>
+          <p>A single-file, fully client-side web application for <strong>market-basket / association-rule mining</strong> on Excel data. Load a workbook, mine frequent itemsets with <strong>Apriori</strong>, generate association rules with a full suite of interestingness metrics, then explore everything through a sortable table, a Top-20 cost chart, and an interactive force-directed rule network.</p>
+          <p>It is a browser port of the Python tool <code>AssociationRulesGUI.py</code>. There is <strong>no server, no build step, no installation, and no mlxtend dependency</strong> &mdash; the Apriori algorithm, frequent-itemset generation, and rule generation are implemented from scratch in plain JavaScript. Open the HTML file and it runs, fully offline.</p>
+          <h4>Interface</h4>
+          <p>The interface is split into two areas:</p>
+          <ul>
+            <li><strong>Sidebar (left):</strong> all controls &mdash; input file, thresholds, text filters, filter presets, and the run/export buttons. It is collapsible and auto-collapses 3 seconds after a successful analysis to maximize result space.</li>
+            <li><strong>Workspace (right):</strong> a topbar (dataset name, compact stat chips, status pill and Help), a tab bar, and the active panel &mdash; <strong>Console</strong> (timestamped log), <strong>Table</strong> (generated rules), and <strong>Graph &amp; Top 20</strong> (cost chart plus rule network).</li>
+          </ul>
+        `
+      },
+      {
+        id: "workflow",
+        title: "Quick start & workflow",
+        html: `
+          <h3>Quick start &amp; workflow</h3>
+          <ol>
+            <li>Open <code>index.html</code> in a modern browser (double-click, or File &#9656; Open).</li>
+            <li>Click the <strong>Input file</strong> picker and choose an <code>.xlsx</code> workbook (for example the included <code>Arbeitsdatei-Quelle.xlsx</code>).</li>
+            <li>Check the detected columns in the <strong>Console</strong> log, then set support and confidence thresholds.</li>
+            <li>Click <strong>Run analysis</strong>.</li>
+            <li>Browse the <strong>Table</strong> tab, then open <strong>Graph &amp; Top 20</strong>.</li>
+            <li>Export the rules, the graph, or your filter presets.</li>
+          </ol>
+          <p>No web server is required &mdash; the page works from a <code>file://</code> URL because all dependencies are local. If your browser restricts <code>file://</code> features, you can serve the folder with any static server (e.g. <code>python3 -m http.server</code>) and open <code>http://localhost:8000/</code>.</p>
         `
       },
       {
         id: "input",
-        title: "Input file",
+        title: "Input data format",
         html: `
-          <h3>Input file</h3>
-          <p>The workbook must contain at least three columns. Column 1 is treated as transaction ID, column 2 as item/material, and column 3 as order number.</p>
-          <p>If a fourth column exists, it is treated as consumption. If a fifth column exists, it is treated as price. Prices are converted to unit prices when consumption is greater than zero.</p>
-          <p>When Include consumption = 0 is enabled, ordered but unused items stay in the analysis. When it is disabled, rows with consumption less than or equal to zero are removed before mining.</p>
+          <h3>Input data format</h3>
+          <p>The first worksheet is read with <code>XLSX.utils.sheet_to_json(sheet, { header: 1 })</code>. Columns are interpreted <strong>by position</strong> &mdash; the header names are informational only and may be anything.</p>
+          <table class="help-table">
+            <thead><tr><th>Column</th><th>Meaning</th><th>Required</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><strong>Transaction ID</strong> &mdash; rows sharing an ID form one transaction (basket)</td><td>Yes</td></tr>
+              <tr><td>2</td><td><strong>Item / material</strong> &mdash; the item placed in the basket</td><td>Yes</td></tr>
+              <tr><td>3</td><td><strong>Order number</strong> &mdash; builds <code>Mat_combination</code> and the <code>unique_ID</code></td><td>Yes</td></tr>
+              <tr><td>4</td><td><strong>Consumption</strong> &mdash; quantity actually used</td><td>optional</td></tr>
+              <tr><td>5</td><td><strong>Price</strong> &mdash; total price; converted to a unit price via <code>price / consumption</code> when consumption &gt; 0</td><td>optional</td></tr>
+            </tbody>
+          </table>
+          <p>Requirements: at least <strong>3 columns</strong> and at least <strong>2 rows</strong> (1 header + 1 data row). Empty rows are ignored; items are trimmed and de-duplicated within a transaction.</p>
+          <p>When <strong>Include consumption = 0</strong> is enabled, ordered-but-unused items (consumption &le; 0) stay in the analysis. When disabled, those rows are removed before mining.</p>
+        `
+      },
+      {
+        id: "thresholds",
+        title: "Thresholds",
+        html: `
+          <h3>Thresholds</h3>
+          <table class="help-table">
+            <thead><tr><th>Control</th><th>Meaning</th><th>Default</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Min support</strong></td><td>Minimum share of transactions an itemset must appear in (0&ndash;1)</td><td>0.003</td></tr>
+              <tr><td><strong>Min confidence</strong></td><td>Minimum confidence for a rule to be kept (0&ndash;1)</td><td>0.10</td></tr>
+              <tr><td><strong>Max. itemset size</strong></td><td>Largest itemset Apriori will build; 0 means no limit</td><td>4</td></tr>
+              <tr><td><strong>Table limit</strong></td><td>Maximum number of rows rendered in the table</td><td>5000</td></tr>
+              <tr><td><strong>Include consumption = 0</strong></td><td>Keep ordered-but-unused items (consumption &le; 0) in the analysis</td><td>on</td></tr>
+            </tbody>
+          </table>
+          <p><strong>Max. itemset size</strong> is the main lever to keep runtime and memory bounded in the browser. Raise <strong>Min support</strong> to prune aggressively on large datasets. The Table limit caps only how many rows are rendered, not how many rules are computed &mdash; the full set is still written by Export all.</p>
         `
       },
       {
         id: "filters",
-        title: "Filters and presets",
+        title: "Text filters",
         html: `
-          <h3>Filters and presets</h3>
-          <p>Include terms keep rows or rules that contain at least one listed term. Exclude terms remove rows or rules that contain at least one listed term.</p>
-          <p>Filter presets store include/exclude terms, quick search, graph search, graph confidence threshold, graph edge limit, confidence labels, and visible table metrics.</p>
-          <p>Presets are stored in the browser for daily use. Export JSON creates a portable file that can be sent to another user. Import JSON loads presets from such a file.</p>
+          <h3>Text filters (before analysis)</h3>
+          <p><strong>Only items containing terms (include):</strong> keep only rows whose item contains at least one of the comma-separated terms. You must enter either none or <strong>at least two terms</strong>; entering a single term aborts the run with a clear message.</p>
+          <p><strong>Exclude items:</strong> drop rows whose item contains any of the comma-separated terms.</p>
+          <p>Terms are case-insensitive, comma-separated, and trimmed. After analysis the same include/exclude terms are also applied to the generated rules (matched against antecedents and consequents).</p>
+        `
+      },
+      {
+        id: "run",
+        title: "Running the analysis",
+        html: `
+          <h3>Running the analysis</h3>
+          <p>Click <strong>Run analysis</strong>. The button shows a spinner, the status pill switches away from the green "ready" state, and progress is streamed to the <strong>Console</strong> tab.</p>
+          <p>On success the table fills in, the charts render, a toast confirms the rule count, and the sidebar auto-collapses after 3 seconds. The status pill turns green again when the app is idle and ready.</p>
+        `
+      },
+      {
+        id: "table",
+        title: "Results table & Top 20",
+        html: `
+          <h3>Results table</h3>
+          <p>Click a column header to sort (click again to reverse). Use <strong>Quick search</strong> to filter antecedents/consequents, toggle which metric columns are visible with the metric chips, and use <strong>Show graph</strong> to switch to the network.</p>
+          <h3>Top-20 cost chart</h3>
+          <p>A horizontal bar chart of the highest <strong>weighted consequent costs</strong> (cost consequents &times; combination count). Click a bar to jump straight to that combination in the graph.</p>
+        `
+      },
+      {
+        id: "graph",
+        title: "Rule graph",
+        html: `
+          <h3>The rule graph</h3>
+          <p>The Rule Network is a D3 force-directed graph:</p>
+          <ul>
+            <li><strong>Nodes</strong> are antecedent or consequent itemsets. A single-item node is one circle; multi-item itemsets are drawn as a small cluster of colored dots.</li>
+            <li><strong>Edges</strong> are directed rules (antecedent &rarr; consequent), with an arrowhead.</li>
+            <li><strong>Encodings:</strong> edge color = confidence (cyan &rarr; violet &rarr; magenta), edge width = combination count, node size = how often the node appears across visible rules.</li>
+          </ul>
+          <table class="help-table">
+            <thead><tr><th>Control</th><th>Effect</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Confidence %</strong></td><td>Toggle percentage labels on edges.</td></tr>
+              <tr><td><strong>Fullscreen</strong></td><td>Expand the graph to fill the page (Esc to exit).</td></tr>
+              <tr><td><strong>New tab</strong></td><td>Open the current graph as a standalone, graph-only view (data passed via localStorage).</td></tr>
+              <tr><td><strong>Export PNG</strong></td><td>Save the current viewport as a high-resolution PNG. Filename is <code>&lt;number&gt;_rule-graph.png</code> when the graph search box holds a number, else <code>rule-graph.png</code>.</td></tr>
+              <tr><td><strong>Max. edges</strong></td><td>Cap graph complexity; the strongest visible rules are shown first.</td></tr>
+              <tr><td><strong>Min. confidence</strong></td><td>Hide edges below this confidence in the graph only.</td></tr>
+              <tr><td><strong>Graph search</strong></td><td>Focus on an item, combination, <code>Mat_combination</code>, or <code>unique_ID</code>.</td></tr>
+              <tr><td><strong>Fit graph</strong></td><td>Re-center and zoom to fit all nodes.</td></tr>
+            </tbody>
+          </table>
+          <p><strong>Interactions:</strong> scroll to zoom, drag the background to pan, drag a node to reposition it, and click a node to focus on it and its direct neighbors (click again or click the background to clear). Clicking a node or edge opens a detail panel with metrics and the matching transaction IDs, which you can copy.</p>
         `
       },
       {
@@ -1455,32 +1669,69 @@
         title: "Metrics",
         html: `
           <h3>Metrics</h3>
-          <h4>Support</h4>
-          <p>Share of transactions containing all items in the full rule. Higher support means the combination appears more often in the dataset.</p>
-          <h4>Confidence</h4>
-          <p>Probability that the consequent appears when the antecedent appears. A confidence of 0.80 means 80% of transactions with the antecedent also contain the consequent.</p>
-          <h4>Lift</h4>
-          <p>How much more often antecedent and consequent occur together than expected by chance. Lift above 1 indicates a positive association.</p>
-          <h4>Leverage</h4>
-          <p>Absolute difference between observed co-occurrence and expected co-occurrence. It is useful for judging the real size of an association.</p>
-          <h4>Conviction</h4>
-          <p>Measures how strongly the antecedent implies the consequent while considering counterexamples. Higher values usually mean a stronger directional implication.</p>
-          <h4>Zhang's metric</h4>
-          <p>Association measure between -1 and 1. Positive values indicate positive association, negative values indicate negative association.</p>
-          <h4>Combination count</h4>
-          <p>Number of transactions containing both antecedent and consequent. This is the concrete count behind the rule.</p>
-          <h4>Cost fields</h4>
-          <p>Cost antecedents and cost consequents sum unit prices for the respective side of the rule. Weighted consequent cost multiplies consequent cost by combination count.</p>
+          <p>For a rule <strong>A &rArr; C</strong> (antecedent &rArr; consequent):</p>
+          <table class="help-table">
+            <thead><tr><th>Metric</th><th>Formula</th><th>Interpretation</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Support</strong></td><td>support(A&cup;C)</td><td>Share of all transactions containing every item in the rule. Higher = more common.</td></tr>
+              <tr><td><strong>Confidence</strong></td><td>support(A&cup;C) / support(A)</td><td>Probability C appears given A appears. 0.8 = 80% of A-baskets also contain C.</td></tr>
+              <tr><td><strong>Lift</strong></td><td>confidence / support(C)</td><td>How much more often A and C co-occur than expected by chance. &gt;1 = positive association.</td></tr>
+              <tr><td><strong>Leverage</strong></td><td>support(A&cup;C) &minus; support(A)&middot;support(C)</td><td>Absolute difference between observed and expected co-occurrence.</td></tr>
+              <tr><td><strong>Conviction</strong></td><td>(1 &minus; support(C)) / (1 &minus; confidence)</td><td>Strength of implication considering counterexamples (&infin; when confidence = 1).</td></tr>
+              <tr><td><strong>Zhang's metric</strong></td><td>see <code>zhangsMetric()</code></td><td>Association in [-1, 1]; positive = positive association, negative = negative.</td></tr>
+              <tr><td><strong>Combination count</strong></td><td>count of A&cup;C baskets</td><td>The concrete basket count behind the rule.</td></tr>
+              <tr><td><strong>Cost antecedents</strong></td><td>&Sigma; unit prices of A</td><td>Total unit-price cost of the antecedent side.</td></tr>
+              <tr><td><strong>Cost consequents</strong></td><td>&Sigma; unit prices of C</td><td>Total unit-price cost of the consequent side.</td></tr>
+              <tr><td><strong>Cost consequents &times; count</strong></td><td>cost_consequents &middot; combination_count</td><td>Weighted consequent cost (drives the Top-20 chart).</td></tr>
+              <tr><td><strong>Cost antecedent + consequents</strong></td><td>cost_antecedents + cost_consequents</td><td>Combined rule cost.</td></tr>
+            </tbody>
+          </table>
+          <p>Metric formulas are kept consistent with the Python reference implementation <code>AssociationRulesGUI.py</code>.</p>
         `
       },
       {
-        id: "graph",
-        title: "Graph view",
+        id: "columns",
+        title: "Output columns",
         html: `
-          <h3>Graph view</h3>
-          <p>Each directed edge represents a rule from antecedents to consequents. The max edges setting limits graph complexity by showing the strongest visible rules first.</p>
-          <p>Click a node to focus on that node, its direct neighbors, and the connecting edges. Click the same node or the empty graph background to clear the focus.</p>
-          <p>Confidence % adds percentage labels to edges. Fullscreen expands the graph inside the page. New tab opens the current graph as a dedicated graph-only view.</p>
+          <h3>Output columns</h3>
+          <p>The Excel export and the table draw from this column set (always-on columns marked with a star):</p>
+          <table class="help-table">
+            <thead><tr><th>Key</th><th>Label</th></tr></thead>
+            <tbody>
+              <tr><td><code>antecedents</code> &#9733;</td><td>Antecedents</td></tr>
+              <tr><td><code>consequents</code> &#9733;</td><td>Consequents</td></tr>
+              <tr><td><code>confidence</code> &#9733;</td><td>Confidence</td></tr>
+              <tr><td><code>support</code></td><td>Support</td></tr>
+              <tr><td><code>lift</code></td><td>Lift</td></tr>
+              <tr><td><code>leverage</code></td><td>Leverage</td></tr>
+              <tr><td><code>conviction</code></td><td>Conviction</td></tr>
+              <tr><td><code>zhangs_metric</code></td><td>Zhangs Metric</td></tr>
+              <tr><td><code>combination_count</code></td><td>Combination Count</td></tr>
+              <tr><td><code>cost_antecedents</code></td><td>Cost Antecedents (EUR)</td></tr>
+              <tr><td><code>cost_consequents</code></td><td>Cost Consequents (EUR)</td></tr>
+              <tr><td><code>cost_consequents_weighted</code></td><td>Cost Consequents &times; Combination Count (EUR)</td></tr>
+              <tr><td><code>cost_total</code></td><td>Cost Antecedent+Consequents (EUR)</td></tr>
+              <tr><td><code>Mat_combination</code></td><td>Mat_combination (joined order numbers)</td></tr>
+              <tr><td><code>Mat_combination_items</code></td><td>Mat_combination_items (joined items)</td></tr>
+              <tr><td><code>unique_ID</code></td><td>unique_ID (deterministic 8-digit ID)</td></tr>
+              <tr><td><code>different items</code></td><td>Different Items (item count in the rule)</td></tr>
+            </tbody>
+          </table>
+          <p>Default visible metric columns: support, lift, combination count, different items.</p>
+        `
+      },
+      {
+        id: "presets",
+        title: "Filter presets",
+        html: `
+          <h3>Filter presets</h3>
+          <p>A filter preset captures: include terms, exclude terms, quick search, graph search, graph min-confidence, graph edge limit, the confidence-label toggle, and the set of visible table metrics.</p>
+          <ul>
+            <li><strong>Save filter / Delete filter</strong> &mdash; manage presets stored in the browser (localStorage).</li>
+            <li><strong>Export JSON</strong> &mdash; produce a portable file (independent of any Excel data) to share with another user of the same app.</li>
+            <li><strong>Import JSON</strong> &mdash; merge presets from such a file.</li>
+            <li>Selecting a preset from the dropdown applies it immediately.</li>
+          </ul>
         `
       },
       {
@@ -1488,21 +1739,111 @@
         title: "Exports",
         html: `
           <h3>Exports</h3>
-          <p>Export all writes the full rule set using the selected table columns.</p>
-          <p>Filter preset export creates a JSON file containing saved filter presets. This file is independent from the Excel data and can be shared with another user of the same HTML app.</p>
+          <p><strong>Export all</strong> (sidebar) writes the full rule set to <code>.xlsx</code> using the currently selected table columns.</p>
+          <p><strong>Export PNG</strong> (graph card) saves the current graph viewport as a high-resolution PNG.</p>
+          <p><strong>Export JSON / Import JSON</strong> (filter presets) share filter configurations between users. The preset JSON carries a <code>version</code> field (currently 1) so future schema changes can be detected.</p>
+        `
+      },
+      {
+        id: "architecture",
+        title: "How it works",
+        html: `
+          <h3>How it works (architecture)</h3>
+          <p>Everything lives in the single <code>&lt;script&gt;</code> block in <code>index.html</code>. The pipeline:</p>
+          <ol>
+            <li><strong>handleFile</strong> &mdash; reads the workbook with SheetJS into <code>state.workbookRows</code>.</li>
+            <li><strong>preprocessRows</strong> &mdash; applies include/exclude term filters and the consumption filter, derives per-item unit prices, and groups rows into transactions keyed by transaction ID.</li>
+            <li><strong>apriori</strong> &mdash; counts single items meeting min support, then iteratively builds size-k candidates via <strong>createCandidates</strong> (join + prune), counts them against all transactions, and keeps those meeting support, up to max itemset size.</li>
+            <li><strong>buildRules</strong> &mdash; for each frequent itemset, enumerates antecedent/consequent splits, computes all metrics, sums costs, collects matching transaction IDs, and assigns a deterministic 8-digit <code>unique_ID</code> (<code>createUnique8DigitId</code>, SHA-256 based).</li>
+            <li><strong>runAnalysis</strong> &mdash; orchestrates the pipeline, validates inputs, logs progress, sorts by confidence then lift, stores results on the central <code>state</code> object, and schedules the sidebar auto-collapse.</li>
+          </ol>
+          <p><strong>Presentation layer:</strong> <code>renderTable</code> (sortable/searchable table), <code>renderCharts</code> &rarr; <code>renderTopChart</code> + <code>renderGraph</code>, <code>exportRows</code> (xlsx writer), and <code>exportGraphPng</code> (viewport &rarr; canvas &rarr; PNG).</p>
+          <p><strong>State:</strong> a single plain <code>state</code> object holds the workbook rows, headers, all/filtered/visible rules, sort settings, stats, and saved presets. No framework, no reactivity &mdash; functions mutate <code>state</code> and call the relevant <code>render*</code> function.</p>
+        `
+      },
+      {
+        id: "persistence",
+        title: "Persistence & privacy",
+        html: `
+          <h3>Configuration &amp; persistence</h3>
+          <p>The app stores a few things in the browser via <code>localStorage</code>:</p>
+          <table class="help-table">
+            <thead><tr><th>Key</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>association-rule-filter-presets-v1</code></td><td>Saved filter presets</td></tr>
+              <tr><td><code>association-rule-sidebar-collapsed</code></td><td>Sidebar collapsed/expanded state</td></tr>
+              <tr><td><code>association-graph-&lt;timestamp&gt;-&lt;rand&gt;</code></td><td>Transient payload for "open graph in new tab"</td></tr>
+            </tbody>
+          </table>
+          <h3>Privacy &amp; security</h3>
+          <p><strong>Your data never leaves your machine.</strong> All parsing, mining, rendering, and exporting happen locally in the browser. There are no analytics, telemetry, or network requests for your data.</p>
+          <p>The only remote resource is the optional Google Fonts import for the UI typefaces; everything else (SheetJS, D3) is bundled locally, so the app remains usable offline.</p>
+        `
+      },
+      {
+        id: "support",
+        title: "Browser support & limits",
+        html: `
+          <h3>Browser support</h3>
+          <p>A current version of <strong>Chrome, Edge, Firefox, or Safari</strong> is recommended. The app relies on modern web APIs including ES2020+ JavaScript, <code>crypto.subtle.digest</code> (for <code>unique_ID</code>), <code>BigInt</code>, <code>canvas.toBlob</code>, and CSS <code>backdrop-filter</code>. <code>crypto.subtle</code> requires a secure context &mdash; <code>file://</code> and <code>http://localhost</code> both qualify.</p>
+          <h3>Performance notes</h3>
+          <p>Apriori candidate counting is roughly O(candidates &times; transactions) per level. This is comfortable for spare-parts-style datasets but can slow down on very large or very dense data. Use Max. itemset size and Min support to keep it bounded.</p>
+          <h3>Known limitations &amp; quirks</h3>
+          <ul>
+            <li><strong>unique_ID collisions:</strong> the ID is derived from <code>Mat_combination</code> (the set of order numbers). Two different item-combinations sharing the same order numbers can produce the same <code>unique_ID</code>.</li>
+            <li><strong>Silent graph errors:</strong> <code>renderCharts</code> is wrapped in try/catch; a graph runtime error surfaces as a toast/log entry &mdash; check the Console tab if a chart looks wrong.</li>
+            <li><strong>PNG export and external assets:</strong> the export serializes the live SVG to a canvas. Cross-origin image content could taint the canvas and make export fail.</li>
+            <li><strong>Single worksheet:</strong> only the first sheet of the workbook is read.</li>
+          </ul>
         `
       },
       {
         id: "oss",
-        title: "Open-source software",
+        title: "License & open-source",
         html: `
-          <h3>Open-source software</h3>
-          <p>Association Rules Studio v${APP_VERSION} is released under the GNU General Public License v3.0. The full app license and the license texts of the bundled components are included in the LICENSE.txt file.</p>
-          <p>This HTML app uses the following open-source components:</p>
-          <p><strong>SheetJS / XLSX</strong> (Apache License 2.0, Copyright (C) SheetJS LLC): used for reading Excel input files and writing Excel export files.</p>
-          <p><strong>D3.js</strong> (ISC License, Copyright Mike Bostock): used for table rendering, sorting helpers, charts, graph layout, and graph interaction.</p>
-          <p><strong>Space Grotesk</strong> and <strong>Source Sans 3</strong> fonts (SIL Open Font License 1.1): used for the user interface typography, loaded from Google Fonts.</p>
-          <p><strong>No mlxtend is used in this HTML version.</strong> Apriori, frequent itemset generation, and association rule generation are implemented directly in this file.</p>
+          <h3>License</h3>
+          <p>Association Rules Studio <strong>version ${APP_VERSION}</strong> is licensed under the <strong>GNU General Public License v3.0</strong> (GPL-3.0). The full app license, plus the complete copyright notices and license texts of every bundled component, are reproduced in the <code>LICENSE.txt</code> file shipped alongside this app. The license is also available on <a href="https://github.com/Adelsdorfer/AssociationRulesGUI/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+          <p>In short, the GPL-3.0 is a copyleft license: you are free to use, study, modify, and redistribute this software, including for commercial purposes, <strong>provided that</strong> you keep it under the same GPL-3.0 license, make the corresponding source code available to recipients, preserve the copyright and license notices, and mark any modified versions as changed. The software is provided <strong>without any warranty</strong>, to the extent permitted by law.</p>
+          <h3>Bundled open-source software</h3>
+          <p>This app bundles and/or loads the following third-party open-source components. Each is distributed under its own license; the full license texts are in <code>LICENSE.txt</code>.</p>
+          <table class="help-table">
+            <thead><tr><th>Component</th><th>Used for</th><th>Copyright</th><th>License</th></tr></thead>
+            <tbody>
+              <tr><td><strong>SheetJS / xlsx</strong> (<code>xlsx.full.min.js</code>)</td><td>Reading Excel input and writing Excel exports</td><td>Copyright (C) 2012-present SheetJS LLC</td><td>Apache License 2.0</td></tr>
+              <tr><td><strong>D3.js v7</strong> (<code>d3.v7.min.js</code>, v7.9.0)</td><td>Table rendering, scales, Top-20 chart, force-directed graph</td><td>Copyright 2010-2023 Mike Bostock</td><td>ISC License</td></tr>
+              <tr><td><strong>Space Grotesk &amp; Source Sans 3</strong></td><td>UI typography (loaded from Google Fonts)</td><td>(C) Florian Karsten / Adobe</td><td>SIL Open Font License 1.1</td></tr>
+            </tbody>
+          </table>
+          <h4>SheetJS / xlsx &mdash; Apache License 2.0</h4>
+          <p>The in-file attribution banner <code>/*! xlsx.js (C) 2013-present SheetJS -- http://sheetjs.com */</code> is preserved unmodified at the top of <code>xlsx.full.min.js</code> and must not be removed. All rights not explicitly granted by the Apache 2.0 License are reserved by the Original Author. The bundled file is used unmodified. The Apache-2.0 license requires preservation of copyright and license notices and an express grant of patent rights; the full terms are in <code>LICENSE.txt</code>. Upstream: <a href="https://github.com/SheetJS/sheetjs/blob/github/LICENSE" target="_blank" rel="noopener noreferrer">SheetJS LICENSE</a>.</p>
+          <h4>D3.js &mdash; ISC License</h4>
+          <p>The in-file banner <code>// https://d3js.org v7.9.0 Copyright 2010-2023 Mike Bostock</code> is preserved unmodified at the top of <code>d3.v7.min.js</code> and must not be removed. The bundled file is used unmodified. The ISC License (functionally equivalent to MIT/BSD-2-Clause) requires that the copyright and permission notice appear in all copies. Full text:</p>
+          <pre class="help-license">Copyright 2010-2023 Mike Bostock
+
+Permission to use, copy, modify, and/or distribute this software for any
+purpose with or without fee is hereby granted, provided that the above
+copyright notice and this permission notice appear in all copies.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
+          <h4>Fonts &mdash; SIL Open Font License 1.1</h4>
+          <p>Space Grotesk and Source Sans 3 are loaded from Google Fonts under the SIL Open Font License, Version 1.1. The license permits use, study, modification, and redistribution of the fonts, but they may not be sold by themselves. The full OFL text is in <code>LICENSE.txt</code>.</p>
+          <p><strong>No mlxtend</strong> (or any Python dependency) is used in this HTML version &mdash; Apriori, frequent-itemset generation, and rule generation are implemented directly in this file.</p>
+        `
+      },
+      {
+        id: "about",
+        title: "Version & contact",
+        html: `
+          <h3>Version &amp; contact</h3>
+          <p><strong>Association Rules Studio v${APP_VERSION}</strong></p>
+          <p>Project repository: <a href="https://github.com/Adelsdorfer/AssociationRulesGUI/tree/main" target="_blank" rel="noopener noreferrer">github.com/Adelsdorfer/AssociationRulesGUI</a></p>
+          <p>In case of questions, contact <strong>Roland Emrich</strong>.</p>
         `
       }
     ];

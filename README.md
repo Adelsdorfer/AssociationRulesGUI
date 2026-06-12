@@ -11,7 +11,8 @@ build step, no installation, and no `mlxtend` dependency** — the Apriori algor
 frequent-itemset generation, and rule generation are implemented from scratch in plain
 JavaScript. Open the HTML file and it runs, fully offline.
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Adelsdorfer/AssociationRulesGUI/blob/main/LICENSE)
+![Version](https://img.shields.io/badge/version-1.0-8b7bff.svg)
 
 ---
 
@@ -466,14 +467,15 @@ Issues and pull requests are welcome. Please:
 
 ## Third-party software
 
-This app bundles the following open-source libraries:
+This app bundles the following open-source libraries. The full copyright notices and the
+complete license texts of each component are reproduced in
+[LICENSE.txt](LICENSE.txt).
 
-- **[SheetJS / xlsx](https://sheetjs.com/)** — reading Excel input and writing Excel
-  exports.
-- **[D3.js v7](https://d3js.org/)** — table rendering, scales, the Top-20 chart, and the
-  force-directed graph layout and interaction.
-
-UI typefaces (**Space Grotesk**, **Source Sans 3**) are loaded from Google Fonts.
+| Component | Used for | Copyright | License |
+| --- | --- | --- | --- |
+| **[SheetJS / xlsx](https://sheetjs.com/)** | Reading Excel input and writing Excel exports | (C) SheetJS LLC | Apache License 2.0 |
+| **[D3.js v7](https://d3js.org/)** | Table rendering, scales, Top-20 chart, force-directed graph | (C) Mike Bostock | ISC License |
+| **Space Grotesk / Source Sans 3** | UI typography (loaded from Google Fonts) | (C) Florian Karsten / Adobe | SIL Open Font License 1.1 |
 
 No `mlxtend` (or any Python dependency) is used in this web version; Apriori, frequent
 itemset generation, and rule generation are implemented directly in `index.html`.
@@ -482,8 +484,9 @@ itemset generation, and rule generation are implemented directly in `index.html`
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0** (GPL-3.0). See the
-full text in [LICENSE.txt](LICENSE.txt).
+Association Rules Studio **version 1.0** is licensed under the **GNU General Public
+License v3.0** (GPL-3.0). See the full text in [LICENSE.txt](LICENSE.txt) or on
+[GitHub](https://github.com/Adelsdorfer/AssociationRulesGUI/blob/main/LICENSE).
 
 In short, the GPL-3.0 is a copyleft license: you are free to use, study, modify, and
 redistribute this software, including for commercial purposes, **provided that** you:
@@ -496,8 +499,9 @@ redistribute this software, including for commercial purposes, **provided that**
 The software is provided **without any warranty**, to the extent permitted by law. This
 summary is informational only — the [LICENSE.txt](LICENSE.txt) text is authoritative.
 
-> Note: the bundled third-party libraries (SheetJS, D3.js) are distributed under their own
-> licenses; see [Third-party software](#third-party-software).
+> Note: the bundled third-party libraries (SheetJS, D3.js) and the bundled fonts are
+> distributed under their own licenses, whose full texts are included in
+> [LICENSE.txt](LICENSE.txt); see also [Third-party software](#third-party-software).
 
 ---
 
