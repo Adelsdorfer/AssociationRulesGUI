@@ -11,6 +11,8 @@ build step, no installation, and no `mlxtend` dependency** — the Apriori algor
 frequent-itemset generation, and rule generation are implemented from scratch in plain
 JavaScript. Open the HTML file and it runs, fully offline.
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE.txt)
+
 ---
 
 ## Table of contents
@@ -345,6 +347,7 @@ flowchart LR
 ├── WebVersion.7z              # Archived snapshot of the web version
 ├── AGENTS.md                  # Guidance for AI agents / contributors
 ├── DESIGN.md                  # Design-system documentation
+├── LICENSE.txt                # GNU GPL v3.0 license text
 └── README.md                  # This file
 ```
 
@@ -479,8 +482,22 @@ itemset generation, and rule generation are implemented directly in `index.html`
 
 ## License
 
-No license file is currently included. Add a `LICENSE` file to declare the terms under which
-this project may be used and distributed. Until then, all rights are reserved by the author.
+This project is licensed under the **GNU General Public License v3.0** (GPL-3.0). See the
+full text in [LICENSE.txt](LICENSE.txt).
+
+In short, the GPL-3.0 is a copyleft license: you are free to use, study, modify, and
+redistribute this software, including for commercial purposes, **provided that** you:
+
+- keep it under the same GPL-3.0 license,
+- make the corresponding **source code** available to recipients,
+- preserve the copyright and license notices, and
+- mark any modified versions as changed.
+
+The software is provided **without any warranty**, to the extent permitted by law. This
+summary is informational only — the [LICENSE.txt](LICENSE.txt) text is authoritative.
+
+> Note: the bundled third-party libraries (SheetJS, D3.js) are distributed under their own
+> licenses; see [Third-party software](#third-party-software).
 
 ---
 
