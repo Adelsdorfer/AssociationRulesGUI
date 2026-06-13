@@ -101,7 +101,7 @@ The interface is split into two areas:
 1. Download / clone this repository.
 2. Open index.html in a modern browser (double-click, or File ▸ Open).
 3. Click the Input file picker and choose an .xlsx workbook
-   (e.g. the included sample.xlsx).
+   (e.g. the included Arbeitsdatei-Quelle.xlsx).
 4. Click "Run analysis".
 5. Browse the Table tab, then open "Graph & Top 20".
 ```
@@ -340,16 +340,17 @@ flowchart LR
 
 ```text
 .
-├── index.html                 # The entire app: HTML + CSS (<style>) + JS (<script>)
-├── xlsx.full.min.js           # Vendored SheetJS — Excel read/write
-├── d3.v7.min.js               # Vendored D3.js v7 — table, charts, graph
-├── sample.xlsx                 # Sample/working input workbook
-├── AssociationRulesGUI.py     # Original Python reference implementation
-├── WebVersion.7z              # Archived snapshot of the web version
-├── AGENTS.md                  # Guidance for AI agents / contributors
-├── DESIGN.md                  # Design-system documentation
-├── LICENSE                    # GNU GPL v3.0 license text
-└── README.md                  # This file
+├── index.html                           # The entire app: HTML + CSS (<style>) + JS (<script>)
+├── xlsx.full.min.js                     # Vendored SheetJS — Excel read/write
+├── d3.v7.min.js                         # Vendored D3.js v7 — table, charts, graph
+├── Arbeitsdatei-Quelle.xlsx             # Sample/working input workbook
+├── association-rule-filter-presets.json # Example exported filter presets
+├── Reference/
+│   └── AssociationRulesGUI.py           # Original Python reference implementation
+├── AGENTS.md                            # Guidance for AI agents / contributors
+├── DESIGN.md                            # Design-system documentation
+├── LICENSE.txt                          # GNU GPL v3.0 + third-party license texts
+└── README.md                            # This file
 ```
 
 `index.html` is the only file you edit; the `*.min.js` files are third-party vendored
@@ -437,7 +438,7 @@ There is no build system, package manager, linter config, or test suite. Develop
 
 1. Edit `index.html`.
 2. Reload the page in the browser.
-3. Load `sample.xlsx`, run an analysis, and verify the table, Top-20 chart, and
+3. Load `Arbeitsdatei-Quelle.xlsx`, run an analysis, and verify the table, Top-20 chart, and
    graph render correctly.
 
 House rules (see [AGENTS.md](AGENTS.md) for the full list):
@@ -469,7 +470,7 @@ Issues and pull requests are welcome. Please:
 
 This app bundles the following open-source libraries. The full copyright notices and the
 complete license texts of each component are reproduced in
-[LICENSE](LICENSE).
+[LICENSE.txt](LICENSE.txt).
 
 | Component | Used for | Copyright | License |
 | --- | --- | --- | --- |
@@ -485,7 +486,7 @@ itemset generation, and rule generation are implemented directly in `index.html`
 ## License
 
 Association Rules Studio **version 1.0** is licensed under the **GNU General Public
-License v3.0** (GPL-3.0). See the full text in [LICENSE](LICENSE) or on
+License v3.0** (GPL-3.0). See the full text in [LICENSE.txt](LICENSE.txt) or on
 [GitHub](https://github.com/Adelsdorfer/Association-Rules-Studio/blob/main/LICENSE).
 
 In short, the GPL-3.0 is a copyleft license: you are free to use, study, modify, and
@@ -497,11 +498,11 @@ redistribute this software, including for commercial purposes, **provided that**
 - mark any modified versions as changed.
 
 The software is provided **without any warranty**, to the extent permitted by law. This
-summary is informational only — the [LICENSE](LICENSE) text is authoritative.
+summary is informational only — the [LICENSE.txt](LICENSE.txt) text is authoritative.
 
 > Note: the bundled third-party libraries (SheetJS, D3.js) and the bundled fonts are
 > distributed under their own licenses, whose full texts are included in
-> [LICENSE](LICENSE); see also [Third-party software](#third-party-software).
+> [LICENSE.txt](LICENSE.txt); see also [Third-party software](#third-party-software).
 
 ---
 

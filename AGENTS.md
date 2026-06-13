@@ -6,7 +6,7 @@ Guidance for AI coding agents (and humans) working in this repository.
 
 **Association Rules Studio** is a single-file, fully client-side web application for
 **market-basket / association-rule mining** on Excel data. It is a browser port of the
-Python tool `AssociationRulesGUI.py` that lives in the same folder — there is **no server,
+Python tool `AssociationRulesGUI.py` in the `Reference/` folder — there is **no server,
 no build step, and no `mlxtend` dependency**. The Apriori algorithm, frequent-itemset
 generation, and rule generation are all implemented from scratch in plain JavaScript.
 
@@ -20,9 +20,9 @@ files are vendored third-party libraries loaded via `<script>` tags.
 | `index.html` | The entire application: HTML + CSS (`<style>`) + JS (`<script>`). **This is the only file you edit.** |
 | `xlsx.full.min.js` | Vendored [SheetJS](https://sheetjs.com/) — reads `.xlsx`/`.xls` input and writes `.xlsx` exports. Do not edit. |
 | `d3.v7.min.js` | Vendored [D3.js v7](https://d3js.org/) — table rendering, charts, force-directed graph, scales, color interpolation. Do not edit. |
-| `sample.xlsx` | Sample/working input workbook for manual testing. |
-| `AssociationRulesGUI.py` | The original Python reference implementation. Source of truth for algorithm behavior. |
-| `WebVersion.7z` | Archived snapshot of the web version. Ignore unless explicitly asked. |
+| `Arbeitsdatei-Quelle.xlsx` | Sample/working input workbook for manual testing. |
+| `association-rule-filter-presets.json` | Example exported filter presets (importable via the **Filter presets** panel). |
+| `Reference/AssociationRulesGUI.py` | The original Python reference implementation. Source of truth for algorithm behavior. |
 | `DESIGN.md` | Visual/design-system documentation (theme tokens, layout, conventions). |
 | `AGENTS.md` | This file. |
 
@@ -30,7 +30,7 @@ files are vendored third-party libraries loaded via `<script>` tags.
 
 There is no build and no package manager. To run, open `index.html` directly in a
 browser (`file://`) — all libraries are local, so it works fully offline. For testing,
-load `sample.xlsx` via the **Input** file picker, then click **Run analysis**.
+load `Arbeitsdatei-Quelle.xlsx` via the **Input** file picker, then click **Run analysis**.
 
 There are **no automated tests, no linter config, and no CI**. Verification is manual:
 open the page, run an analysis, and confirm the table, Top-20 chart, and graph render.
@@ -136,6 +136,7 @@ If you change any metric, keep it consistent with `AssociationRulesGUI.py`.
 
 - `association-rule-filter-presets-v1` — saved filter presets (`FILTER_PRESET_STORAGE_KEY`).
 - `association-rule-sidebar-collapsed` — sidebar collapsed state (`SIDEBAR_COLLAPSED_STORAGE_KEY`).
+- `association-rule-theme` — selected color theme `"dark"` | `"light"` (`THEME_STORAGE_KEY`); defaults to dark.
 - `association-graph-<timestamp>-<rand>` — transient payload for the "open graph in new tab" feature.
 - Preset JSON export/import uses `FILTER_PRESET_EXPORT_VERSION` (currently `1`); bump it on a breaking schema change.
 
@@ -148,9 +149,15 @@ If you change any metric, keep it consistent with `AssociationRulesGUI.py`.
   requested.
 - **CSS:** the design is token-driven via `:root` custom properties (`--ink`, `--surface`,
   `--pine`, etc.). Prefer changing/using tokens over hardcoding colors. See `DESIGN.md`.
+- **Theme toggle:** the topbar switch (`#themeToggleBtn`) flips between the default **dark**
+  "Deep Space" theme and a **light** theme. Light mode is `:root[data-theme="light"]`, which
+  redefines the tokens plus overrides for the few hardcoded dark backgrounds (html gradient,
+  starfield, topbar, tabs, table header, graph card, console, detail panel). `applyTheme` /
+  `toggleTheme` / `initTheme` manage the `data-theme` attribute and `THEME_STORAGE_KEY`.
 - **Colors injected from JS** (D3 `.attr("fill"/"stroke")`, chart gradients, node palette,
   `scaleSequential` interpolators) are **not** covered by CSS tokens — update them in the
-  script when changing the theme.
+  script when changing the theme. Theme-dependent chart/graph text + stroke colors come from
+  the **`chartInk()`** helper; `toggleTheme` re-runs `renderCharts()` so they pick up the swap.
 - **Verify D3 APIs exist in the bundled build** before using them, e.g.
   `grep -o piecewise d3.v7.min.js`. The vendored file is a specific v7 build.
 - **2-space indentation**, double-quoted strings, `const`/`let`, `camelCase` for JS;

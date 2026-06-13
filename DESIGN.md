@@ -40,6 +40,26 @@ follows automatically. Keep the token names stable.
 `color-scheme: dark` is set on `:root` so native controls (number spinners, scrollbars)
 render dark.
 
+## Light theme & the theme toggle
+
+A topbar switch (`#themeToggleBtn`, a sliding moon↔sun toggle in `.topbar-actions`) flips
+between the default **dark** "Deep Space" theme and a **light** theme. The choice persists
+in `localStorage` under `THEME_STORAGE_KEY` (`association-rule-theme`) and defaults to dark.
+
+- Light mode is activated by `data-theme="light"` on the **root `<html>` element**
+  (`applyTheme` / `toggleTheme` / `initTheme`). It is implemented as
+  `:root[data-theme="light"]`, which **redefines the design tokens** to a bright palette
+  (`--ink:#1b2438`, `--bg:#e9eef9`, white `--surface`, dark-on-light `--line`, deeper
+  accents `--pine:#6d5cf0` / `--moss:#0891b2`) and sets `color-scheme: light`.
+- Because most of the UI is token-driven, the token swap covers the bulk of it. A handful
+  of **hardcoded dark backgrounds** get explicit light overrides: the `html` nebula
+  gradient, the `body::before` starfield (hidden in light), `.topbar`, `.tabs` / `.tab`,
+  `thead th`, table zebra/hover, `.log` console, `.graph-card` (+ card-head, pill,
+  controls, detail panel), and the graph buttons.
+- **Graph/chart text is theme-aware in JS** via `chartInk()` (see below); `toggleTheme`
+  re-runs `renderCharts()` so labels/axes/halos flip with the theme.
+
+
 ## Color usage
 
 - **Primary action** (`Run analysis`, `Show graph`): `.btn-primary` — violet→indigo
@@ -51,15 +71,19 @@ render dark.
 - **Selection**: violet (`::selection`); placeholders: muted violet-grey.
 
 ### Colors injected from JavaScript (D3) — NOT tokenized
-These must be edited in the `<script>` when retheming:
+These must be edited in the `<script>` when retheming. Theme-dependent text/stroke/halo
+colors for the chart and graph come from the **`chartInk()`** helper (returns a dark- or
+light-mode palette based on `data-theme`); the vibrant accent hues below are shared by both
+themes:
 - **Top-20 bar gradient** (`#barGradient`): `#8b7bff` → `#22d3ee`.
-- **Bar value labels / axes**: `#eaeefb`, axis text `#97a1c2` / `#c2cae6`, grid
-  `rgba(255,255,255,0.14)`.
+- **Bar value labels / axes**: theme-aware via `chartInk()` (`barValue` / `axisText` /
+  `yAxisText` / `axisLine`).
 - **Graph edge color**: sequential `piecewise(interpolateRgb.gamma(2.2), ["#22d3ee",
   "#8b7bff", "#ff6bb3"])` — cyan → violet → magenta by confidence.
 - **Single-item node**: `#8b7bff`; **compound-node palette**:
   `["#8b7bff", "#22d3ee", "#ff6bb3", "#f4c869", "#6ea8ff", "#42e8c0"]`.
-- Edge/label strokes use dark halos: `rgba(6,9,18,0.78–0.86)`.
+- Edge/label strokes use halos from `chartInk()`: dark halos `rgba(6,9,18,0.78–0.86)` in
+  dark mode, light halos `rgba(255,255,255,0.9–0.92)` with dark text in light mode.
 
 > Before using a new D3 function, confirm it exists in the vendored build:
 > `grep -o "piecewise" d3.v7.min.js`.
@@ -88,8 +112,8 @@ These must be edited in the `<script>` when retheming:
   empty panel gets pushed to the bottom of the page before any analysis runs.
 - **`.topbar`** — flex row holding the title block (`Results` + dataset name), compact
   **stat chips** (`.stat-chip`: Transactions / Items / Rules / Visible) right of the title,
-  and `.topbar-actions` (status pill + Help button) pushed to the far right via
-  `margin-left:auto`. There is no longer a separate full-width `.stats` row — the chips
+  and `.topbar-actions` (theme toggle + status pill + Help button) pushed to the far right
+  via `margin-left:auto`. There is no longer a separate full-width `.stats` row — the chips
   keep the metrics inline to save vertical space.
 - **Tabs / panels** — Console, Table (default), Graph & Top 20. Only the `.panel.active`
   is shown.

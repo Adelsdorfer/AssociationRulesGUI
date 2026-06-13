@@ -644,7 +644,8 @@
       display: grid;
       grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.35fr);
       gap: 18px;
-      min-height: calc(100vh - 265px);
+      min-height: min(680px, calc(100vh - 265px));
+      max-height: calc(100vh - 265px);
     }
 
     .card {
@@ -676,7 +677,10 @@
 
     .graph-card {
       position: relative;
-      min-height: 680px;
+      min-height: min(680px, calc(100vh - 265px));
+      max-height: calc(100vh - 265px);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
       background:
         radial-gradient(circle at 18% 18%, rgba(124, 92, 255, 0.30), transparent 16rem),
         radial-gradient(circle at 90% 12%, rgba(34, 211, 238, 0.22), transparent 20rem),
@@ -692,6 +696,7 @@
       width: auto;
       height: auto;
       min-height: 0;
+      max-height: none;
       display: grid;
       grid-template-rows: auto minmax(0, 1fr) auto;
       overflow: hidden;
@@ -705,6 +710,19 @@
       border-color: rgba(255, 250, 240, 0.12);
       background: rgba(6, 9, 18, 0.45);
       backdrop-filter: blur(12px);
+    }
+
+    /* Safari ghost-artifact fix: backdrop-filter must sample the pixels behind it,
+       and in normal (in-flow) mode those pixels are the live, animating graph SVG on
+       the SHARED document layer. When the force simulation settles and the layer is
+       re-composited, WebKit fails to cleanly re-rasterise that backdrop source and
+       leaves stale ghost pixels (Chrome handles it; fullscreen is position:fixed so
+       it is isolated and clean). Dropping backdrop-filter in normal mode removes the
+       backdrop-sampling-over-animation entirely. Fullscreen keeps the blur. */
+    .graph-card:not(.graph-fullscreen) .card-head {
+      background: rgba(6, 9, 18, 0.86);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
     }
 
     .graph-card .pill {
@@ -773,6 +791,17 @@
       backdrop-filter: blur(16px);
     }
 
+    /* Safari ghost-artifact fix (see .card-head note): this control bar is absolutely
+       positioned directly OVER the animating graph, so its backdrop-filter samples the
+       live SVG and leaves ghost pixels on WebKit's shared layer when the simulation
+       settles. Drop the blur in normal mode and use a solid dark panel so the light
+       labels/inputs stay readable. Fullscreen keeps the frosted glass. */
+    .graph-card:not(.graph-fullscreen) .graph-controls {
+      background: rgba(9, 13, 28, 0.9);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+
     .graph-controls label {
       color: rgba(255, 250, 240, 0.82);
     }
@@ -784,8 +813,29 @@
 
     #ruleGraph {
       width: 100%;
-      height: 680px;
+      height: 100%;
+      min-height: 0;
       display: block;
+    }
+
+    .graph-card:not(.graph-fullscreen) {
+      /* SAFARI-ONLY artifact fix. Chrome composites cleanly; Safari/WebKit leaves
+         stale ghost pixels when the SHARED document layer is re-composited — which
+         happens in normal view when the Top-20 bar animation ends and when the
+         viewport-relative card height settles just after renderGraph. Fullscreen
+         (position:fixed) and new-tab (sole content) never show it because the card
+         already sits on its OWN backing surface there.
+         `will-change: transform` was too soft for WebKit (it can optimise the hint
+         away). `translateZ(0)` + `backface-visibility: hidden` is the classic, hard
+         WebKit layer-promotion combo: it forces a real, stable backing surface for
+         the card, so the bar-animation-end / resize re-composite on the document
+         layer can no longer disturb the graph's pixels.
+         Placed on the CARD, never on #ruleGraph: d3-zoom scales the SVG's inner <g>,
+         so promoting the SVG re-scaled its cached texture on hover (a zoom-snap); the
+         card itself is never scaled, so it composites cleanly. */
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
     }
 
     .graph-card.graph-fullscreen #ruleGraph {
@@ -958,6 +1008,7 @@
       grid-template-rows: auto minmax(0, 1fr) auto;
       height: 100vh;
       min-height: 0;
+      max-height: none;
       border: 0;
       border-radius: 0;
     }
@@ -978,6 +1029,8 @@
 
     .graph-tooltip {
       position: fixed;
+      top: 0;
+      left: 0;
       z-index: 20;
       max-width: 340px;
       pointer-events: none;
@@ -988,15 +1041,22 @@
       background: rgba(10, 15, 32, 0.94);
       box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
       opacity: 0;
-      transform: translateY(6px);
-      transition: opacity 120ms ease, transform 120ms ease;
+      /* Position comes from transform: translate3d() set in JS on mousemove.
+         Using transform instead of left/top makes following the cursor a
+         compositor-only move, so the big box-shadow is rastered once on the
+         tooltip's own layer (will-change) and never repainted per mouse move
+         — that per-move shadow repaint was the hover/tooltip flicker. The fade
+         is opacity-only; transform is deliberately NOT transitioned so the
+         tooltip never lags behind the cursor. */
+      transform: translate3d(0, 0, 0);
+      will-change: transform;
+      transition: opacity 120ms ease;
       font-size: 13px;
       line-height: 1.35;
     }
 
     .graph-tooltip.visible {
       opacity: 1;
-      transform: translateY(0);
     }
 
     .log {
@@ -1309,6 +1369,337 @@
         height: 560px;
       }
     }
+
+    /* ===== Theme toggle switch ===== */
+    .theme-toggle {
+      position: relative;
+      flex: 0 0 auto;
+      width: 60px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--surface-strong);
+      transition: background 200ms ease, border-color 200ms ease;
+    }
+
+    .theme-toggle:hover {
+      border-color: rgba(139, 123, 255, 0.55);
+    }
+
+    .theme-toggle:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.25);
+    }
+
+    .theme-toggle .theme-toggle-icon {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 16px;
+      height: 16px;
+      color: var(--muted);
+      transition: color 200ms ease, opacity 200ms ease;
+    }
+
+    .theme-toggle .theme-toggle-icon.moon {
+      left: 8px;
+      color: var(--saffron);
+    }
+
+    .theme-toggle .theme-toggle-icon.sun {
+      right: 8px;
+      opacity: 0.5;
+    }
+
+    .theme-toggle .theme-toggle-thumb {
+      position: absolute;
+      top: 50%;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      transform: translateY(-50%);
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8b7bff, #4c2fd6);
+      box-shadow: 0 3px 8px rgba(2, 4, 12, 0.5);
+      transition: left 220ms cubic-bezier(0.4, 1.3, 0.5, 1), background 200ms ease;
+    }
+
+    :root[data-theme="light"] .theme-toggle .theme-toggle-thumb {
+      left: 33px;
+      background: linear-gradient(135deg, #ffd97a, #f0b942);
+    }
+
+    :root[data-theme="light"] .theme-toggle .theme-toggle-icon.sun {
+      opacity: 1;
+      color: #c98a12;
+    }
+
+    :root[data-theme="light"] .theme-toggle .theme-toggle-icon.moon {
+      opacity: 0.5;
+      color: var(--muted);
+    }
+
+    /* ===== Light mode ===== */
+    :root[data-theme="light"] {
+      color-scheme: light;
+      --ink: #1b2438;
+      --muted: #5b6b8c;
+      --paper: #ffffff;
+      --paper-strong: #eef1f8;
+      --line: rgba(20, 28, 48, 0.12);
+      --line-strong: rgba(20, 28, 48, 0.22);
+      --pine: #6d5cf0;
+      --moss: #0891b2;
+      --saffron: #e0a92b;
+      --clay: #e85aa0;
+      --blue: #2563eb;
+      --graph-bg: #eef2fb;
+      --graph-panel: rgba(255, 255, 255, 0.9);
+      --shadow: 0 24px 55px rgba(31, 45, 80, 0.14);
+      --glow: 0 0 24px rgba(109, 92, 240, 0.25);
+      --bg: #e9eef9;
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-strong: rgba(20, 28, 48, 0.05);
+    }
+
+    html[data-theme="light"] {
+      background:
+        radial-gradient(circle at 12% 12%, rgba(124, 92, 255, 0.10), transparent 30rem),
+        radial-gradient(circle at 88% 8%, rgba(34, 211, 238, 0.10), transparent 28rem),
+        radial-gradient(circle at 72% 102%, rgba(255, 107, 179, 0.08), transparent 32rem),
+        linear-gradient(160deg, #f4f6fd 0%, #eef2fb 46%, #e6ecf8 100%);
+    }
+
+    :root[data-theme="light"] body::before {
+      opacity: 0;
+    }
+
+    :root[data-theme="light"] ::placeholder {
+      color: rgba(91, 107, 140, 0.7);
+    }
+
+    :root[data-theme="light"] .version-pill {
+      border-color: rgba(109, 92, 240, 0.35);
+      color: #5840d6;
+      background: rgba(109, 92, 240, 0.12);
+    }
+
+    :root[data-theme="light"] .github-pill:hover,
+    :root[data-theme="light"] .github-pill:focus-visible {
+      border-color: rgba(109, 92, 240, 0.55);
+      color: #5840d6;
+      background: rgba(109, 92, 240, 0.12);
+    }
+
+    :root[data-theme="light"] label,
+    :root[data-theme="light"] .check,
+    :root[data-theme="light"] .metric-chip {
+      color: #38415c;
+    }
+
+    :root[data-theme="light"] input[type="text"],
+    :root[data-theme="light"] input[type="number"],
+    :root[data-theme="light"] input[type="file"],
+    :root[data-theme="light"] select {
+      background: #ffffff;
+    }
+
+    :root[data-theme="light"] input:focus,
+    :root[data-theme="light"] select:focus {
+      border-color: rgba(109, 92, 240, 0.75);
+      box-shadow: 0 0 0 4px rgba(109, 92, 240, 0.18);
+      background: #ffffff;
+    }
+
+    :root[data-theme="light"] .topbar {
+      background:
+        linear-gradient(90deg, rgba(20, 28, 48, 0.04), rgba(20, 28, 48, 0.015)),
+        radial-gradient(circle at 24% -40%, rgba(124, 92, 255, 0.12), transparent 18rem);
+    }
+
+    :root[data-theme="light"] .tabs {
+      background: rgba(20, 28, 48, 0.025);
+    }
+
+    :root[data-theme="light"] .tab {
+      border-color: rgba(20, 28, 48, 0.12);
+      background: rgba(20, 28, 48, 0.03);
+    }
+
+    :root[data-theme="light"] .tab.active {
+      border-color: var(--line-strong);
+      border-bottom-color: transparent;
+      background: #ffffff;
+      box-shadow: 0 10px 24px rgba(31, 45, 80, 0.12);
+    }
+
+    :root[data-theme="light"] thead th {
+      background: #e7ecf8;
+      color: #2a3450;
+    }
+
+    :root[data-theme="light"] tbody td {
+      border-bottom: 1px solid rgba(20, 28, 48, 0.08);
+    }
+
+    :root[data-theme="light"] tbody tr:nth-child(even) {
+      background: rgba(20, 28, 48, 0.03);
+    }
+
+    :root[data-theme="light"] tbody tr:hover {
+      background: rgba(109, 92, 240, 0.12);
+    }
+
+    :root[data-theme="light"] .log {
+      color: #28324a;
+      background: #f5f7fc;
+      box-shadow: inset 0 1px 0 rgba(20, 28, 48, 0.05);
+    }
+
+    :root[data-theme="light"] .graph-card {
+      background:
+        radial-gradient(circle at 18% 18%, rgba(124, 92, 255, 0.12), transparent 16rem),
+        radial-gradient(circle at 90% 12%, rgba(34, 211, 238, 0.10), transparent 20rem),
+        radial-gradient(circle at 60% 112%, rgba(255, 107, 179, 0.08), transparent 22rem),
+        linear-gradient(150deg, #f3f5fd 0%, #eef2fb 48%, #e6ecf8 100%);
+      color: #1b2438;
+    }
+
+    :root[data-theme="light"] .graph-card .card-head {
+      border-color: rgba(20, 28, 48, 0.10);
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    :root[data-theme="light"] .graph-card .pill {
+      border-color: rgba(20, 28, 48, 0.16);
+      color: #38415c;
+      background: rgba(20, 28, 48, 0.05);
+    }
+
+    :root[data-theme="light"] .btn-graph,
+    :root[data-theme="light"] .graph-toggle {
+      border-color: rgba(20, 28, 48, 0.18);
+      color: #2a3450;
+      background: rgba(20, 28, 48, 0.06);
+    }
+
+    :root[data-theme="light"] .btn-graph:hover:not(:disabled) {
+      background: rgba(20, 28, 48, 0.12);
+    }
+
+    :root[data-theme="light"] .graph-controls {
+      border-color: rgba(20, 28, 48, 0.16);
+      background: rgba(255, 255, 255, 0.66);
+      box-shadow: 0 20px 50px rgba(31, 45, 80, 0.14);
+    }
+
+    :root[data-theme="light"] .graph-controls label {
+      color: #38415c;
+    }
+
+    :root[data-theme="light"] .graph-controls input {
+      border-color: rgba(20, 28, 48, 0.22);
+      background: #ffffff;
+    }
+
+    :root[data-theme="light"] .graph-detail-panel {
+      border-color: rgba(20, 28, 48, 0.14);
+      color: #28324a;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 22px 58px rgba(31, 45, 80, 0.2);
+    }
+
+    :root[data-theme="light"] .graph-detail-head h4 {
+      color: #1b2438;
+    }
+
+    :root[data-theme="light"] .graph-detail-type,
+    :root[data-theme="light"] .graph-detail-row span:first-child {
+      color: #6a7490;
+    }
+
+    :root[data-theme="light"] .graph-detail-row {
+      border-bottom-color: rgba(20, 28, 48, 0.1);
+    }
+
+    :root[data-theme="light"] .graph-detail-row span:last-child {
+      color: #28324a;
+    }
+
+    :root[data-theme="light"] .graph-detail-close {
+      border-color: rgba(20, 28, 48, 0.18);
+      color: #2a3450;
+      background: rgba(20, 28, 48, 0.06);
+    }
+
+    :root[data-theme="light"] .graph-detail-ids textarea {
+      border-color: rgba(20, 28, 48, 0.18);
+      color: #1b2438;
+      background: #f5f7fc;
+    }
+
+    :root[data-theme="light"] .help-backdrop {
+      background: rgba(20, 28, 48, 0.4);
+    }
+
+    :root[data-theme="light"] .help-panel {
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 30px 90px rgba(31, 45, 80, 0.25);
+    }
+
+    :root[data-theme="light"] .help-topics {
+      background: rgba(20, 28, 48, 0.025);
+    }
+
+    :root[data-theme="light"] .help-topic.active,
+    :root[data-theme="light"] .help-topic:hover {
+      background: rgba(109, 92, 240, 0.14);
+    }
+
+    :root[data-theme="light"] .help-content p,
+    :root[data-theme="light"] .help-content ul,
+    :root[data-theme="light"] .help-content ol {
+      color: #38415c;
+    }
+
+    :root[data-theme="light"] .help-content a:hover,
+    :root[data-theme="light"] .help-content a:focus-visible {
+      color: #0e7490;
+    }
+
+    :root[data-theme="light"] .help-content code {
+      background: rgba(20, 28, 48, 0.07);
+      color: #2a3450;
+    }
+
+    :root[data-theme="light"] .help-table th,
+    :root[data-theme="light"] .help-table td {
+      color: #38415c;
+    }
+
+    :root[data-theme="light"] .help-table th {
+      background: rgba(109, 92, 240, 0.12);
+      color: #1b2438;
+    }
+
+    :root[data-theme="light"] .help-table tbody tr:nth-child(even) td {
+      background: rgba(20, 28, 48, 0.03);
+    }
+
+    :root[data-theme="light"] .help-license {
+      background: #f5f7fc;
+      color: #2a3450;
+    }
+
+    :root[data-theme="light"] .pill.is-ready {
+      border-color: rgba(22, 163, 74, 0.45);
+      color: #15803d;
+      background: rgba(34, 197, 94, 0.16);
+    }
   </style>
 </head>
 <body>
@@ -1359,9 +1750,10 @@
             <input id="maxItemsetSize" type="number" min="0" step="1" value="4">
             <p class="hint">0 means no limit. 4 is more stable in the browser.</p>
           </div>
-        <div class="field">
-          <label for="topRuleLimit">Table limit</label>
+          <div class="field">
+            <label for="topRuleLimit">Table limit</label>
             <input id="topRuleLimit" type="number" min="100" step="100" value="5000">
+            <p class="hint">Caps rendered rows only. Export all writes the full set.</p>
           </div>
         </div>
         <label class="check">
@@ -1424,6 +1816,11 @@
           <span class="stat-chip"><span>Visible</span><strong id="statVisible">0</strong></span>
         </div>
         <div class="topbar-actions">
+          <button class="theme-toggle" id="themeToggleBtn" type="button" role="switch" aria-checked="false" aria-label="Switch to light mode" title="Toggle light / dark mode">
+            <span class="theme-toggle-icon moon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
+            <span class="theme-toggle-icon sun" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><line x1="12" y1="1.6" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.4"/><line x1="1.6" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.4" y2="12"/><line x1="4.2" y1="4.2" x2="5.9" y2="5.9"/><line x1="18.1" y1="18.1" x2="19.8" y2="19.8"/><line x1="4.2" y1="19.8" x2="5.9" y2="18.1"/><line x1="18.1" y1="5.9" x2="19.8" y2="4.2"/></svg></span>
+            <span class="theme-toggle-thumb" aria-hidden="true"></span>
+          </button>
           <span class="pill is-ready" id="runtimeStatus">ready</span>
           <button class="btn btn-secondary" id="helpOpenBtn" type="button">Help</button>
         </div>
@@ -1500,7 +1897,7 @@
             <div class="graph-controls">
               <div class="field">
                 <label for="graphLimit">Max. edges</label>
-                <input id="graphLimit" type="number" min="5" max="500" step="5" value="90">
+                <input id="graphLimit" type="number" min="5" max="500" step="5" value="150">
               </div>
               <div class="field">
                 <label for="graphMinConfidence">Min. confidence</label>
@@ -1544,6 +1941,7 @@
     const FILTER_PRESET_STORAGE_KEY = "association-rule-filter-presets-v1";
     const FILTER_PRESET_EXPORT_VERSION = 1;
     const SIDEBAR_COLLAPSED_STORAGE_KEY = "association-rule-sidebar-collapsed";
+    const THEME_STORAGE_KEY = "association-rule-theme";
 
     const helpTopics = [
       {
@@ -1870,6 +2268,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         frequentItemsets: 0
       },
       graphZoom: null,
+      graphSimulation: null,
       savedFilterPresets: {},
       activeFilterPreset: ""
     };
@@ -1971,6 +2370,69 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
     function initSidebarState() {
       setSidebarCollapsed(localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "1");
+    }
+
+    function applyTheme(theme, persist = true) {
+      const light = theme === "light";
+      if (light) {
+        document.documentElement.setAttribute("data-theme", "light");
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+      }
+      const toggle = el("themeToggleBtn");
+      if (toggle) {
+        toggle.setAttribute("aria-checked", light ? "true" : "false");
+        toggle.setAttribute("aria-label", light ? "Switch to dark mode" : "Switch to light mode");
+      }
+      if (persist) {
+        localStorage.setItem(THEME_STORAGE_KEY, light ? "light" : "dark");
+      }
+    }
+
+    function toggleTheme() {
+      const light = document.documentElement.getAttribute("data-theme") === "light";
+      applyTheme(light ? "dark" : "light");
+      if (state.filteredRules && state.filteredRules.length) {
+        renderCharts();
+      }
+    }
+
+    function initTheme() {
+      applyTheme(localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark", false);
+    }
+
+    function chartInk() {
+      const light = document.documentElement.getAttribute("data-theme") === "light";
+      if (light) {
+        return {
+          axisText: "#5b6b8c",
+          axisLine: "rgba(20,28,48,0.12)",
+          yAxisText: "#38415c",
+          barValue: "#1b2438",
+          nodeFill: "rgba(27,36,56,0.94)",
+          nodeHalo: "rgba(255,255,255,0.92)",
+          edgeFill: "rgba(27,36,56,0.96)",
+          edgeHalo: "rgba(255,255,255,0.9)",
+          nodeStroke: "rgba(27,36,56,0.42)",
+          arrow: "rgba(27,36,56,0.55)",
+          empty: "rgba(27,36,56,0.7)",
+          pngBg: "#eef2fb"
+        };
+      }
+      return {
+        axisText: "#97a1c2",
+        axisLine: "rgba(255,255,255,0.14)",
+        yAxisText: "#c2cae6",
+        barValue: "#eaeefb",
+        nodeFill: "rgba(255,250,240,0.88)",
+        nodeHalo: "rgba(6,9,18,0.78)",
+        edgeFill: "rgba(255,250,240,0.92)",
+        edgeHalo: "rgba(6,9,18,0.86)",
+        nodeStroke: "rgba(255,250,240,0.82)",
+        arrow: "rgba(255,250,240,0.72)",
+        empty: "rgba(255,250,240,0.78)",
+        pngBg: "#060912"
+      };
     }
 
     function showHelpTopic(topicId) {
@@ -2839,6 +3301,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
     function renderTopChart() {
       const svg = d3.select("#topChart");
+      const ink = chartInk();
       svg.selectAll("*").remove();
       const rows = state.filteredRules.filter(row => row.unique_ID);
       if (!rows.length) {
@@ -2850,7 +3313,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           .attr("x", width / 2)
           .attr("y", height / 2)
           .attr("text-anchor", "middle")
-          .attr("fill", "#97a1c2")
+          .attr("fill", ink.axisText)
           .attr("font-weight", 800)
           .text("No Top 20 data available.");
         return;
@@ -2886,8 +3349,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .attr("transform", `translate(0,${height - margin.bottom})`)
         .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format(".2s")))
         .call(g => g.select(".domain").remove())
-        .call(g => g.selectAll("line").attr("stroke", "rgba(255,255,255,0.14)"))
-        .call(g => g.selectAll("text").attr("fill", "#97a1c2").attr("font-weight", 700));
+        .call(g => g.selectAll("line").attr("stroke", ink.axisLine))
+        .call(g => g.selectAll("text").attr("fill", ink.axisText).attr("font-weight", 700));
 
       const yAxis = svg.append("g")
         .attr("transform", `translate(${margin.left},0)`)
@@ -2898,7 +3361,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         }))
         .call(g => g.select(".domain").remove())
         .call(g => g.selectAll("line").remove())
-        .call(g => g.selectAll("text").attr("fill", "#c2cae6").attr("font-size", 11).attr("font-weight", 700));
+        .call(g => g.selectAll("text").attr("fill", ink.yAxisText).attr("font-size", 11).attr("font-weight", 700));
 
       yAxis.selectAll("text")
         .attr("cursor", "pointer")
@@ -2944,7 +3407,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .attr("x", d => x(d.total) + 8)
         .attr("y", d => y(d.id) + y.bandwidth() / 2)
         .attr("dy", "0.35em")
-        .attr("fill", "#eaeefb")
+        .attr("fill", ink.barValue)
         .attr("font-weight", 800)
         .attr("font-size", 12)
         .attr("cursor", "pointer")
@@ -2959,10 +3422,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       el("graphSearch").value = combination.id;
       el("graphMinConfidence").value = "0";
       switchTab("graphPanel");
-      window.setTimeout(() => {
-        renderGraph();
-        fitGraph();
-      }, 120);
       toast(`Graph filtered to ${combination.label} (${combination.id}).`);
     }
 
@@ -3000,8 +3459,26 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
     function renderGraph() {
       const svg = d3.select("#ruleGraph");
+      // Full teardown before redrawing. The artifacts only appeared on RE-render
+      // (after selecting a Top-20 item), i.e. leftover state from the previous graph
+      // bleeding into the new one. We therefore tear everything down explicitly:
+      //  1) interrupt in-flight zoom/fit transitions on the persistent <svg> node,
+      //  2) stop the previous force simulation,
+      //  3) drop old zoom listeners and reset the stored zoom transform (__zoom),
+      //     which otherwise carries the previous fit transform into the new graph,
+      //  4) remove all DOM children and clear the cached zoom handle.
+      svg.interrupt();
+      svg.selectAll("*").interrupt();
+      if (state.graphSimulation) {
+        state.graphSimulation.stop();
+        state.graphSimulation = null;
+      }
+      svg.on(".zoom", null);
+      svg.property("__zoom", d3.zoomIdentity);
       svg.selectAll("*").remove();
+      state.graphZoom = null;
       closeGraphDetail();
+      const ink = chartInk();
 
       const showConfidenceLabels = el("showConfidenceLabels").checked;
       const rules = currentGraphRules();
@@ -3015,7 +3492,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           .attr("x", width / 2)
           .attr("y", height / 2)
           .attr("text-anchor", "middle")
-          .attr("fill", "rgba(255,250,240,0.78)")
+          .attr("fill", ink.empty)
           .attr("font-weight", 800)
           .text("No graph data for the current filters.");
         return;
@@ -3084,14 +3561,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .domain([d3.min(links, d => d.confidence) || 0, d3.max(links, d => d.confidence) || 1]);
 
       const defs = svg.append("defs");
-      defs.append("filter")
-        .attr("id", "nodeGlow")
-        .append("feDropShadow")
-        .attr("dx", 0)
-        .attr("dy", 6)
-        .attr("stdDeviation", 6)
-        .attr("flood-color", "#000")
-        .attr("flood-opacity", 0.34);
 
       defs.selectAll("marker")
         .data(["arrow"])
@@ -3105,7 +3574,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .attr("markerUnits", "userSpaceOnUse")
         .attr("orient", "auto")
         .append("path")
-        .attr("fill", "rgba(255,250,240,0.72)")
+        .attr("fill", ink.arrow)
         .attr("d", "M0,-5L10,0L0,5");
 
       const zoomLayer = svg.append("g");
@@ -3118,7 +3587,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .scaleExtent([0.18, 4])
         .on("zoom", event => zoomLayer.attr("transform", event.transform));
       svg.call(zoom);
-      state.graphZoom = { svg, zoom, width, height };
+      state.graphZoom = { svg, zoom, width, height, content: zoomLayer.node() };
 
       seedNodePositions(nodes, links, width, height);
 
@@ -3129,6 +3598,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .force("x", d3.forceX(width / 2).strength(0.065))
         .force("y", d3.forceY(height / 2).strength(0.075))
         .alphaDecay(0.0182);
+      state.graphSimulation = simulation;
 
       const link = linkLayer.selectAll("path")
         .data(links)
@@ -3143,9 +3613,9 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       const edgeLabel = edgeLabelLayer.selectAll("text")
         .data(showConfidenceLabels ? links : [])
         .join("text")
-        .attr("fill", "rgba(255,250,240,0.92)")
+        .attr("fill", ink.edgeFill)
         .attr("paint-order", "stroke")
-        .attr("stroke", "rgba(6,9,18,0.86)")
+        .attr("stroke", ink.edgeHalo)
         .attr("stroke-width", 5)
         .attr("font-size", 11)
         .attr("font-weight", 900)
@@ -3156,7 +3626,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .data(nodes)
         .join("g")
         .attr("class", "node")
-        .attr("filter", "url(#nodeGlow)")
         .call(d3.drag()
           .on("start", dragstarted)
           .on("drag", dragged)
@@ -3170,7 +3639,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
             .attr("class", "node-part")
             .attr("r", radius(d.count))
             .attr("fill", "#8b7bff")
-            .attr("stroke", "rgba(255,250,240,0.82)")
+            .attr("stroke", ink.nodeStroke)
             .attr("stroke-width", 1.6);
           return;
         }
@@ -3183,16 +3652,16 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           .attr("cy", part => part.y)
           .attr("r", part => part.r)
           .attr("fill", part => part.fill)
-          .attr("stroke", "rgba(255,250,240,0.82)")
+          .attr("stroke", ink.nodeStroke)
           .attr("stroke-width", 1.35);
       });
 
       const label = labelLayer.selectAll("text")
         .data(nodes)
         .join("text")
-        .attr("fill", "rgba(255,250,240,0.88)")
+        .attr("fill", ink.nodeFill)
         .attr("paint-order", "stroke")
-        .attr("stroke", "rgba(6,9,18,0.78)")
+        .attr("stroke", ink.nodeHalo)
         .attr("stroke-width", 5)
         .attr("font-size", d => d.degree > 2 ? 12 : 10)
         .attr("font-weight", 800)
@@ -3200,6 +3669,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .text(d => truncate(d.label, d.items > 1 ? 30 : 24));
 
       const tooltip = d3.select("#graphTooltip");
+      const moveTooltip = event => tooltip.style("transform", `translate3d(${event.clientX + 14}px, ${event.clientY + 14}px, 0)`);
       let focusedNodeId = null;
 
       function addNodeCost(nodeDatum, combinationKey, amount) {
@@ -3366,9 +3836,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           node.attr("opacity", n => n.id === d.id || links.some(link => (link.source.id === d.id && link.target.id === n.id) || (link.target.id === d.id && link.source.id === n.id)) ? 1 : 0.22);
           link.attr("stroke-opacity", link => link.source.id === d.id || link.target.id === d.id ? 0.95 : 0.10);
           edgeLabel.attr("opacity", link => link.source.id === d.id || link.target.id === d.id ? 1 : 0.16);
+          moveTooltip(event);
           tooltip.classed("visible", true).html(`<strong>${d.label}</strong><br>Rule connections: ${d.degree}<br>Combination count sum: ${d.count}<br>Node cost sum: ${formatCurrency(d.costSum)}<br>Transaction IDs: ${formatTransactionIds([...d.transactionIds])}<br><span style="opacity:0.78">Costs counted once per visible combination.</span>`);
         })
-        .on("mousemove", event => tooltip.style("left", `${event.clientX + 14}px`).style("top", `${event.clientY + 14}px`))
+        .on("mousemove", moveTooltip)
         .on("mouseleave", () => {
           if (focusedNodeId) {
             tooltip.classed("visible", false);
@@ -3388,9 +3859,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       link
         .on("mouseenter", (event, d) => {
           if (focusedNodeId && !isConnectedToFocus(d)) return;
+          moveTooltip(event);
           tooltip.classed("visible", true).html(`<strong>${d.source.id} -> ${d.target.id}</strong><br>Confidence: ${d.confidence.toFixed(4)}<br>Lift: ${d.lift.toFixed(4)}<br>Combination Count: ${d.count}<br>Transaction IDs: ${formatTransactionIds(d.transactionIds)}<br>${d.mat}`);
         })
-        .on("mousemove", event => tooltip.style("left", `${event.clientX + 14}px`).style("top", `${event.clientY + 14}px`))
+        .on("mousemove", moveTooltip)
         .on("mouseleave", () => tooltip.classed("visible", false))
         .on("click", (event, d) => {
           event.stopPropagation();
@@ -3413,6 +3885,18 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         edgeLabel
           .attr("x", d => edgeLabelPosition(d).x)
           .attr("y", d => edgeLabelPosition(d).y);
+
+        if (state.pendingFit && simulation.alpha() < 0.06) {
+          state.pendingFit = false;
+          fitGraph(false);
+        }
+      });
+
+      simulation.on("end", () => {
+        if (state.pendingFit) {
+          state.pendingFit = false;
+          fitGraph(false);
+        }
       });
 
       el("graphStatus").textContent = `${nodes.length} nodes / ${links.length} edges`;
@@ -3435,10 +3919,41 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       }
     }
 
-    function fitGraph() {
+    function fitGraph(animate = true) {
       if (!state.graphZoom) return;
-      const { svg, zoom, width, height } = state.graphZoom;
-      svg.transition().duration(450).call(zoom.transform, d3.zoomIdentity.translate(width * 0.04, height * 0.03).scale(0.92));
+      const { svg, zoom, content } = state.graphZoom;
+      const svgNode = svg.node();
+      const width = svgNode.clientWidth || state.graphZoom.width;
+      const height = svgNode.clientHeight || state.graphZoom.height;
+      svg.attr("viewBox", [0, 0, width, height]);
+      // Auto-fit after a (re)render is applied instantly; only the manual "Fit graph"
+      // button animates. Animating a fresh graph from the identity transform could
+      // leave brief paint residue during the zoom, which is what the re-render
+      // artifacts looked like.
+      const apply = animate ? svg.transition().duration(450) : svg;
+
+      let bounds = null;
+      try {
+        bounds = content ? content.getBBox() : null;
+      } catch (error) {
+        bounds = null;
+      }
+      if (!bounds || !bounds.width || !bounds.height) {
+        apply.call(zoom.transform, d3.zoomIdentity);
+        return;
+      }
+
+      const padding = 48;
+      const scale = Math.max(0.18, Math.min(1.4, Math.min(
+        (width - padding * 2) / bounds.width,
+        (height - padding * 2) / bounds.height
+      )));
+      const tx = (width - bounds.width * scale) / 2 - bounds.x * scale;
+      const ty = (height - bounds.height * scale) / 2 - bounds.y * scale;
+      apply.call(
+        zoom.transform,
+        d3.zoomIdentity.translate(tx, ty).scale(scale)
+      );
     }
 
     function graphPngFilename() {
@@ -3478,7 +3993,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         canvas.width = outWidth;
         canvas.height = outHeight;
         const ctx = canvas.getContext("2d");
-        ctx.fillStyle = "#060912";
+        ctx.fillStyle = chartInk().pngBg;
         ctx.fillRect(0, 0, outWidth, outHeight);
         ctx.drawImage(image, 0, 0, outWidth, outHeight);
         canvas.toBlob(blob => {
@@ -3512,10 +4027,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       card.classList.toggle("graph-fullscreen", isFullscreen);
       document.body.classList.toggle("graph-modal-open", isFullscreen);
       el("fullscreenGraphBtn").textContent = isFullscreen ? "Exit fullscreen" : "Fullscreen";
-      window.setTimeout(() => {
-        renderGraph();
-        fitGraph();
-      }, 80);
+      state.pendingFit = true;
+      window.setTimeout(renderGraph, 80);
     }
 
     function slimGraphRule(rule) {
@@ -3609,6 +4122,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       el("openGraphTabBtn").style.display = "none";
       updateStats();
       switchTab("graphPanel");
+      state.pendingFit = true;
       window.setTimeout(fitGraph, 180);
       return true;
     }
@@ -3655,6 +4169,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         setSidebarCollapsed(!document.body.classList.contains("sidebar-collapsed"));
       });
       el("helpOpenBtn").addEventListener("click", openHelp);
+      el("themeToggleBtn").addEventListener("click", toggleTheme);
       el("helpCloseBtn").addEventListener("click", closeHelp);
       el("helpBackdrop").addEventListener("click", closeHelp);
       el("helpSearch").addEventListener("input", renderHelpTopics);
@@ -3678,7 +4193,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       el("quickSearch").addEventListener("input", renderTable);
       el("topRuleLimit").addEventListener("change", renderTable);
       el("renderGraphBtn").addEventListener("click", () => switchTab("graphPanel"));
-      el("fitGraphBtn").addEventListener("click", fitGraph);
+      el("fitGraphBtn").addEventListener("click", () => fitGraph(true));
       el("fullscreenGraphBtn").addEventListener("click", toggleGraphFullscreen);
       el("openGraphTabBtn").addEventListener("click", openGraphInNewTab);
       el("exportGraphPngBtn").addEventListener("click", exportGraphPng);
@@ -3713,11 +4228,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
     function applyAppVersion() {
       el("appVersion").textContent = `v${APP_VERSION}`;
-      el("sidebarCopyright").textContent = `Association Rules Studio v${APP_VERSION} · In case of questions, contact Roland Emrich`;
+      el("sidebarCopyright").innerHTML = `Association Rules Studio v${APP_VERSION}<br>In case of questions, contact Roland Emrich`;
       document.title = `Association Rules Studio v${APP_VERSION}`;
     }
 
     applyAppVersion();
+    initTheme();
     renderMetricChooser();
     renderHelpTopics();
     initSidebarState();
