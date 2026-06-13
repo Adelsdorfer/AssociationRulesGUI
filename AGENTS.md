@@ -20,7 +20,7 @@ files are vendored third-party libraries loaded via `<script>` tags.
 | `index.html` | The entire application: HTML + CSS (`<style>`) + JS (`<script>`). **This is the only file you edit.** |
 | `xlsx.full.min.js` | Vendored [SheetJS](https://sheetjs.com/) — reads `.xlsx`/`.xls` input and writes `.xlsx` exports. Do not edit. |
 | `d3.v7.min.js` | Vendored [D3.js v7](https://d3js.org/) — table rendering, charts, force-directed graph, scales, color interpolation. Do not edit. |
-| `Arbeitsdatei-Quelle.xlsx` | Sample/working input workbook for manual testing. |
+| `sample.xlsx` | Sample/working input workbook for manual testing. |
 | `AssociationRulesGUI.py` | The original Python reference implementation. Source of truth for algorithm behavior. |
 | `WebVersion.7z` | Archived snapshot of the web version. Ignore unless explicitly asked. |
 | `DESIGN.md` | Visual/design-system documentation (theme tokens, layout, conventions). |
@@ -30,7 +30,7 @@ files are vendored third-party libraries loaded via `<script>` tags.
 
 There is no build and no package manager. To run, open `index.html` directly in a
 browser (`file://`) — all libraries are local, so it works fully offline. For testing,
-load `Arbeitsdatei-Quelle.xlsx` via the **Input** file picker, then click **Run analysis**.
+load `sample.xlsx` via the **Input** file picker, then click **Run analysis**.
 
 There are **no automated tests, no linter config, and no CI**. Verification is manual:
 open the page, run an analysis, and confirm the table, Top-20 chart, and graph render.

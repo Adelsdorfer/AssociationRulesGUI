@@ -11,7 +11,7 @@ build step, no installation, and no `mlxtend` dependency** — the Apriori algor
 frequent-itemset generation, and rule generation are implemented from scratch in plain
 JavaScript. Open the HTML file and it runs, fully offline.
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Adelsdorfer/AssociationRulesGUI/blob/main/LICENSE)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://github.com/Adelsdorfer/Association-Rules-Studio/blob/main/LICENSE)
 ![Version](https://img.shields.io/badge/version-1.0-8b7bff.svg)
 
 ---
@@ -101,7 +101,7 @@ The interface is split into two areas:
 1. Download / clone this repository.
 2. Open index.html in a modern browser (double-click, or File ▸ Open).
 3. Click the Input file picker and choose an .xlsx workbook
-   (e.g. the included Arbeitsdatei-Quelle.xlsx).
+   (e.g. the included sample.xlsx).
 4. Click "Run analysis".
 5. Browse the Table tab, then open "Graph & Top 20".
 ```
@@ -343,7 +343,7 @@ flowchart LR
 ├── index.html                 # The entire app: HTML + CSS (<style>) + JS (<script>)
 ├── xlsx.full.min.js           # Vendored SheetJS — Excel read/write
 ├── d3.v7.min.js               # Vendored D3.js v7 — table, charts, graph
-├── Arbeitsdatei-Quelle.xlsx   # Sample/working input workbook
+├── sample.xlsx                 # Sample/working input workbook
 ├── AssociationRulesGUI.py     # Original Python reference implementation
 ├── WebVersion.7z              # Archived snapshot of the web version
 ├── AGENTS.md                  # Guidance for AI agents / contributors
@@ -437,7 +437,7 @@ There is no build system, package manager, linter config, or test suite. Develop
 
 1. Edit `index.html`.
 2. Reload the page in the browser.
-3. Load `Arbeitsdatei-Quelle.xlsx`, run an analysis, and verify the table, Top-20 chart, and
+3. Load `sample.xlsx`, run an analysis, and verify the table, Top-20 chart, and
    graph render correctly.
 
 House rules (see [AGENTS.md](AGENTS.md) for the full list):
@@ -486,7 +486,7 @@ itemset generation, and rule generation are implemented directly in `index.html`
 
 Association Rules Studio **version 1.0** is licensed under the **GNU General Public
 License v3.0** (GPL-3.0). See the full text in [LICENSE](LICENSE) or on
-[GitHub](https://github.com/Adelsdorfer/AssociationRulesGUI/blob/main/LICENSE).
+[GitHub](https://github.com/Adelsdorfer/Association-Rules-Studio/blob/main/LICENSE).
 
 In short, the GPL-3.0 is a copyleft license: you are free to use, study, modify, and
 redistribute this software, including for commercial purposes, **provided that** you:

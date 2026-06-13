@@ -1321,7 +1321,7 @@
         <h1>Association Rules Studio</h1>
         <div class="brand-meta">
           <span class="pill version-pill" id="appVersion">v1.0</span>
-          <a class="pill github-pill" id="githubLink" href="https://github.com/Adelsdorfer/AssociationRulesGUI/tree/main" target="_blank" rel="noopener noreferrer" title="View the project on GitHub">
+          <a class="pill github-pill" id="githubLink" href="https://github.com/Adelsdorfer/Association-Rules-Studio" target="_blank" rel="noopener noreferrer" title="View the project on GitHub">
             <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" focusable="false"><path fill="currentColor" fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path></svg>
             <span>GitHub</span>
           </a>
@@ -1568,7 +1568,7 @@
           <h3>Quick start &amp; workflow</h3>
           <ol>
             <li>Open <code>index.html</code> in a modern browser (double-click, or File &#9656; Open).</li>
-            <li>Click the <strong>Input file</strong> picker and choose an <code>.xlsx</code> workbook (for example the included <code>Arbeitsdatei-Quelle.xlsx</code>).</li>
+            <li>Click the <strong>Input file</strong> picker and choose an <code>.xlsx</code> workbook (for example the included <code>sample.xlsx</code>).</li>
             <li>Check the detected columns in the <strong>Console</strong> log, then set support and confidence thresholds.</li>
             <li>Click <strong>Run analysis</strong>.</li>
             <li>Browse the <strong>Table</strong> tab, then open <strong>Graph &amp; Top 20</strong>.</li>
@@ -1809,7 +1809,7 @@
         title: "License & open-source",
         html: `
           <h3>License</h3>
-          <p>Association Rules Studio <strong>version ${APP_VERSION}</strong> is licensed under the <strong>GNU General Public License v3.0</strong> (GPL-3.0). The full app license, plus the complete copyright notices and license texts of every bundled component, are reproduced in the <code>LICENSE.txt</code> file shipped alongside this app. The license is also available on <a href="https://github.com/Adelsdorfer/AssociationRulesGUI/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+          <p>Association Rules Studio <strong>version ${APP_VERSION}</strong> is licensed under the <strong>GNU General Public License v3.0</strong> (GPL-3.0). The full app license, plus the complete copyright notices and license texts of every bundled component, are reproduced in the <code>LICENSE.txt</code> file shipped alongside this app. The license is also available on <a href="https://github.com/Adelsdorfer/Association-Rules-Studio/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
           <p>In short, the GPL-3.0 is a copyleft license: you are free to use, study, modify, and redistribute this software, including for commercial purposes, <strong>provided that</strong> you keep it under the same GPL-3.0 license, make the corresponding source code available to recipients, preserve the copyright and license notices, and mark any modified versions as changed. The software is provided <strong>without any warranty</strong>, to the extent permitted by law.</p>
           <h3>Bundled open-source software</h3>
           <p>This app bundles and/or loads the following third-party open-source components. Each is distributed under its own license; the full license texts are in <code>LICENSE.txt</code>.</p>
@@ -1849,7 +1849,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         html: `
           <h3>Version &amp; contact</h3>
           <p><strong>Association Rules Studio v${APP_VERSION}</strong></p>
-          <p>Project repository: <a href="https://github.com/Adelsdorfer/AssociationRulesGUI/tree/main" target="_blank" rel="noopener noreferrer">github.com/Adelsdorfer/AssociationRulesGUI</a></p>
+          <p>Project repository: <a href="https://github.com/Adelsdorfer/Association-Rules-Studio" target="_blank" rel="noopener noreferrer">github.com/Adelsdorfer/Association-Rules-Studio</a></p>
           <p>In case of questions, contact <strong>Roland Emrich</strong>.</p>
         `
       }
@@ -3120,12 +3120,15 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       svg.call(zoom);
       state.graphZoom = { svg, zoom, width, height };
 
+      seedNodePositions(nodes, links, width, height);
+
       const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(d => 130 + Math.min(160, String(d.source.id || d.source).length + String(d.target.id || d.target).length)))
         .force("charge", d3.forceManyBody().strength(-520))
         .force("collide", d3.forceCollide().radius(d => nodeVisualRadius(d) + 28))
         .force("x", d3.forceX(width / 2).strength(0.065))
-        .force("y", d3.forceY(height / 2).strength(0.075));
+        .force("y", d3.forceY(height / 2).strength(0.075))
+        .alphaDecay(0.0182);
 
       const link = linkLayer.selectAll("path")
         .data(links)
@@ -3253,6 +3256,48 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           const offset = group.length > 1 ? 28 : 0;
           for (const edge of group) edge.labelOffset = offset;
         }
+      }
+
+      function seedNodePositions(nodeList, edgeList, width, height) {
+        // Reduce unnecessary edge crossings by starting the force layout from an
+        // organized circle instead of the default random spiral. Nodes are ordered
+        // around the circle with a barycentric heuristic so that connected nodes end
+        // up close together, which the simulation then refines.
+        const count = nodeList.length;
+        if (!count) return;
+        const indexById = new Map(nodeList.map((node, index) => [node.id, index]));
+        const neighbors = nodeList.map(() => []);
+        for (const edge of edgeList) {
+          const sourceIndex = indexById.get(String(edge.source));
+          const targetIndex = indexById.get(String(edge.target));
+          if (sourceIndex === undefined || targetIndex === undefined) continue;
+          neighbors[sourceIndex].push(targetIndex);
+          neighbors[targetIndex].push(sourceIndex);
+        }
+
+        let order = nodeList.map((_, index) => index);
+        for (let pass = 0; pass < 8; pass++) {
+          const slotOf = new Map();
+          order.forEach((nodeIndex, slot) => slotOf.set(nodeIndex, slot));
+          const barycenter = order.map(nodeIndex => {
+            const nodeNeighbors = neighbors[nodeIndex];
+            if (!nodeNeighbors.length) return slotOf.get(nodeIndex);
+            let sum = 0;
+            for (const neighborIndex of nodeNeighbors) sum += slotOf.get(neighborIndex);
+            return sum / nodeNeighbors.length;
+          });
+          order = order
+            .map((nodeIndex, slot) => ({ nodeIndex, key: barycenter[slot] }))
+            .sort((a, b) => a.key - b.key)
+            .map(entry => entry.nodeIndex);
+        }
+
+        const seedRadius = Math.min(width, height) * 0.38 || 240;
+        order.forEach((nodeIndex, slot) => {
+          const angle = (slot / count) * Math.PI * 2;
+          nodeList[nodeIndex].x = width / 2 + Math.cos(angle) * seedRadius;
+          nodeList[nodeIndex].y = height / 2 + Math.sin(angle) * seedRadius;
+        });
       }
 
       function edgeLabelPosition(edgeDatum) {
