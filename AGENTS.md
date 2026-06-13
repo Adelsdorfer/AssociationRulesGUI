@@ -74,8 +74,10 @@ All logic is inside the single `<script>` block in `index.html`. The pipeline:
     calls **`showCombinationInGraph`**, which sets the **Graph search** field + graph
     min-confidence to `0` and switches to the Graph tab — it intentionally does **not**
     auto-fit/zoom the graph (the auto-fit was removed; users pan/zoom or hit **Fit graph**).
-  - `renderGraph` sets the SVG `viewBox` **once per render** from the card size; there is no
-    `ResizeObserver` re-syncing it (window `resize` already triggers a full re-render). The
+  - `renderGraph` sets the SVG `viewBox` **once per render** from the card size. A
+    `ResizeObserver` re-syncs it to the card size **only** when the topbar **graph
+    auto-resize** switch is on (`state.graphAutoResize`, off by default); window `resize`
+    always triggers a full re-render regardless. The
     graph **tooltip** is `position: fixed` and follows the cursor via a compositor-only
     `transform: translate3d(...)` (`moveTooltip`); never animate its `left`/`top` (repaints
     the box-shadow → flicker). Do **not** put `will-change`/layer-promotion on `#ruleGraph`
@@ -148,6 +150,13 @@ If you change any metric, keep it consistent with `AssociationRulesGUI.py`.
 - `association-rule-filter-presets-v1` — saved filter presets (`FILTER_PRESET_STORAGE_KEY`).
 - `association-rule-sidebar-collapsed` — sidebar collapsed state (`SIDEBAR_COLLAPSED_STORAGE_KEY`).
 - `association-rule-theme` — selected color theme `"dark"` | `"light"` (`THEME_STORAGE_KEY`); defaults to dark.
+- `association-rule-graph-autoresize` — graph auto-resize toggle `"1"` | `"0"`
+  (`GRAPH_AUTORESIZE_STORAGE_KEY`); defaults to off. A topbar pill switch
+  (`#graphResizeToggleBtn`, next to the theme toggle) flips `state.graphAutoResize`
+  (`applyGraphAutoResize` / `toggleGraphAutoResize` / `initGraphAutoResize`) and re-renders
+  the graph. When **on**, `renderGraph` attaches a `ResizeObserver` that keeps the SVG
+  `viewBox` synced to the card size; when **off** (default) the viewBox is set once per
+  render — off avoids the Safari compositing ghost (see “Known quirks”).
 - `association-graph-<timestamp>-<rand>` — transient payload for the "open graph in new tab" feature.
 - Preset JSON export/import uses `FILTER_PRESET_EXPORT_VERSION` (currently `1`); bump it on a breaking schema change.
 

@@ -366,6 +366,8 @@ The app stores a few things in the browser via `localStorage`:
 |---|---|
 | `association-rule-filter-presets-v1` | Saved filter presets |
 | `association-rule-sidebar-collapsed` | Sidebar collapsed/expanded state |
+| `association-rule-theme` | Selected color theme (`dark` / `light`) |
+| `association-rule-graph-autoresize` | Graph auto-resize toggle (topbar switch) |
 | `association-graph-<timestamp>-<rand>` | Transient payload for "open graph in new tab" |
 
 The preset JSON export carries a `version` field (currently `1`) so future schema changes

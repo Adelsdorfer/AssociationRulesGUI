@@ -1383,13 +1383,56 @@
       transition: background 200ms ease, border-color 200ms ease;
     }
 
-    .theme-toggle:hover {
+    .theme-toggle:hover,
+    .switch-toggle:hover {
       border-color: rgba(139, 123, 255, 0.55);
     }
 
-    .theme-toggle:focus-visible {
+    .theme-toggle:focus-visible,
+    .switch-toggle:focus-visible {
       outline: none;
       box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.25);
+    }
+
+    /* Generic on/off pill switch (graph auto-resize toggle in the topbar). */
+    .switch-toggle {
+      position: relative;
+      flex: 0 0 auto;
+      width: 52px;
+      height: 30px;
+      padding: 0;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: var(--surface-strong);
+      transition: background 200ms ease, border-color 200ms ease;
+    }
+
+    .switch-toggle .switch-toggle-thumb {
+      position: absolute;
+      top: 50%;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      transform: translateY(-50%);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.16);
+      box-shadow: 0 3px 8px rgba(2, 4, 12, 0.5);
+      transition: left 220ms cubic-bezier(0.4, 1.3, 0.5, 1), background 200ms ease, color 200ms ease;
+    }
+
+    .switch-toggle.is-on {
+      border-color: rgba(139, 123, 255, 0.55);
+      background: rgba(139, 123, 255, 0.22);
+    }
+
+    .switch-toggle.is-on .switch-toggle-thumb {
+      left: 25px;
+      color: #fff;
+      background: linear-gradient(135deg, #8b7bff, #4c2fd6);
     }
 
     .theme-toggle .theme-toggle-icon {
@@ -1816,6 +1859,11 @@
           <span class="stat-chip"><span>Visible</span><strong id="statVisible">0</strong></span>
         </div>
         <div class="topbar-actions">
+          <button class="switch-toggle" id="graphResizeToggleBtn" type="button" role="switch" aria-checked="false" aria-label="Enable graph auto-resize" title="Graph auto-resize: re-fit the rule graph when its panel changes size. Off by default to avoid a Safari rendering artifact.">
+            <span class="switch-toggle-thumb" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 4 4 4 4 9"/><polyline points="15 20 20 20 20 15"/><line x1="4" y1="4" x2="10" y2="10"/><line x1="20" y1="20" x2="14" y2="14"/></svg>
+            </span>
+          </button>
           <button class="theme-toggle" id="themeToggleBtn" type="button" role="switch" aria-checked="false" aria-label="Switch to light mode" title="Toggle light / dark mode">
             <span class="theme-toggle-icon moon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
             <span class="theme-toggle-icon sun" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><line x1="12" y1="1.6" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.4"/><line x1="1.6" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.4" y2="12"/><line x1="4.2" y1="4.2" x2="5.9" y2="5.9"/><line x1="18.1" y1="18.1" x2="19.8" y2="19.8"/><line x1="4.2" y1="19.8" x2="5.9" y2="18.1"/><line x1="18.1" y1="5.9" x2="19.8" y2="4.2"/></svg></span>
@@ -1942,6 +1990,7 @@
     const FILTER_PRESET_EXPORT_VERSION = 1;
     const SIDEBAR_COLLAPSED_STORAGE_KEY = "association-rule-sidebar-collapsed";
     const THEME_STORAGE_KEY = "association-rule-theme";
+    const GRAPH_AUTORESIZE_STORAGE_KEY = "association-rule-graph-autoresize";
 
     const helpTopics = [
       {
@@ -2269,6 +2318,8 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       },
       graphZoom: null,
       graphSimulation: null,
+      graphResizeObserver: null,
+      graphAutoResize: false,
       savedFilterPresets: {},
       activeFilterPreset: ""
     };
@@ -2399,6 +2450,31 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
     function initTheme() {
       applyTheme(localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark", false);
+    }
+
+    function applyGraphAutoResize(enabled, persist = true) {
+      state.graphAutoResize = !!enabled;
+      const toggle = el("graphResizeToggleBtn");
+      if (toggle) {
+        toggle.classList.toggle("is-on", state.graphAutoResize);
+        toggle.setAttribute("aria-checked", state.graphAutoResize ? "true" : "false");
+        toggle.setAttribute("aria-label", state.graphAutoResize ? "Disable graph auto-resize" : "Enable graph auto-resize");
+      }
+      if (persist) {
+        localStorage.setItem(GRAPH_AUTORESIZE_STORAGE_KEY, state.graphAutoResize ? "1" : "0");
+      }
+    }
+
+    function toggleGraphAutoResize() {
+      applyGraphAutoResize(!state.graphAutoResize);
+      // Re-render the graph so the ResizeObserver is attached/detached for the new setting.
+      if (state.filteredRules && state.filteredRules.length) {
+        renderGraph();
+      }
+    }
+
+    function initGraphAutoResize() {
+      applyGraphAutoResize(localStorage.getItem(GRAPH_AUTORESIZE_STORAGE_KEY) === "1", false);
     }
 
     function chartInk() {
@@ -3469,6 +3545,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       //  4) remove all DOM children and clear the cached zoom handle.
       svg.interrupt();
       svg.selectAll("*").interrupt();
+      if (state.graphResizeObserver) {
+        state.graphResizeObserver.disconnect();
+        state.graphResizeObserver = null;
+      }
       if (state.graphSimulation) {
         state.graphSimulation.stop();
         state.graphSimulation = null;
@@ -3590,6 +3670,24 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       state.graphZoom = { svg, zoom, width, height, content: zoomLayer.node() };
 
       seedNodePositions(nodes, links, width, height);
+
+      // Optional: keep the SVG viewBox in sync with the card size while it is open.
+      // Off by default (toggle in the topbar) because re-mapping the viewBox after the
+      // initial render can trigger a Safari/WebKit compositing ghost over the graph.
+      if (state.graphAutoResize && typeof ResizeObserver === "function") {
+        const svgNode = svg.node();
+        const observer = new ResizeObserver(() => {
+          const nextWidth = svgNode.clientWidth || width;
+          const nextHeight = svgNode.clientHeight || height;
+          svg.attr("viewBox", [0, 0, nextWidth, nextHeight]);
+          if (state.graphZoom) {
+            state.graphZoom.width = nextWidth;
+            state.graphZoom.height = nextHeight;
+          }
+        });
+        observer.observe(svgNode);
+        state.graphResizeObserver = observer;
+      }
 
       const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(d => 130 + Math.min(160, String(d.source.id || d.source).length + String(d.target.id || d.target).length)))
@@ -4170,6 +4268,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       });
       el("helpOpenBtn").addEventListener("click", openHelp);
       el("themeToggleBtn").addEventListener("click", toggleTheme);
+      el("graphResizeToggleBtn").addEventListener("click", toggleGraphAutoResize);
       el("helpCloseBtn").addEventListener("click", closeHelp);
       el("helpBackdrop").addEventListener("click", closeHelp);
       el("helpSearch").addEventListener("input", renderHelpTopics);
@@ -4234,6 +4333,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
     applyAppVersion();
     initTheme();
+    initGraphAutoResize();
     renderMetricChooser();
     renderHelpTopics();
     initSidebarState();
