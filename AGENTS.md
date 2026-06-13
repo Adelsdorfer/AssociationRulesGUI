@@ -70,6 +70,17 @@ All logic is inside the single `<script>` block in `index.html`. The pipeline:
 - **`renderTable`** — sortable, searchable D3 table; columns chosen via `renderMetricChooser`.
 - **`renderCharts`** → **`renderTopChart`** (Top-20 cost bar chart) + **`renderGraph`**
   (force-directed rule network; nodes = items, directed edges = rules).
+  - `renderTopChart` bars **animate in** (width `0` → value over ~650 ms). Clicking a bar
+    calls **`showCombinationInGraph`**, which sets the **Graph search** field + graph
+    min-confidence to `0` and switches to the Graph tab — it intentionally does **not**
+    auto-fit/zoom the graph (the auto-fit was removed; users pan/zoom or hit **Fit graph**).
+  - `renderGraph` sets the SVG `viewBox` **once per render** from the card size; there is no
+    `ResizeObserver` re-syncing it (window `resize` already triggers a full re-render). The
+    graph **tooltip** is `position: fixed` and follows the cursor via a compositor-only
+    `transform: translate3d(...)` (`moveTooltip`); never animate its `left`/`top` (repaints
+    the box-shadow → flicker). Do **not** put `will-change`/layer-promotion on `#ruleGraph`
+    itself — d3-zoom scales its inner `<g>`, so promoting the SVG re-scales a cached texture
+    on hover (visible zoom-snap). Promote the **card** instead if needed.
 - **`exportRows`** — writes results back to `.xlsx` with SheetJS.
 - **`exportGraphPng`** — exports the **current graph viewport** (clones `#ruleGraph` with
   its live zoom/pan `viewBox`) to a high-res PNG via canvas. Filename comes from
@@ -181,3 +192,17 @@ If you change any metric, keep it consistent with `AssociationRulesGUI.py`.
   (topbar, tabs, panel) — the old separate `.stats` row was removed.
 - PNG export relies on serializing the live SVG; if you add external `<image>` or
   cross-origin assets into the graph, the canvas may taint and `toBlob` will fail.
+- **Safari graph ghost artifact (WebKit compositing):** in normal (in-flow) mode, Safari
+  could leave ghost/stacked node pixels ~1 s after a render, when the force simulation
+  settled and the shared document layer re-composited (Chrome was always clean; fullscreen
+  / open-in-new-tab were clean because `position: fixed` / sole content isolate the card on
+  its own surface). Root cause: the two frosted-glass overlays **inside** the graph card —
+  `.graph-card .card-head` (`blur(12px)`) and the absolutely-positioned `.graph-controls`
+  (`blur(16px)`) — have `backdrop-filter`, which must sample the live animating SVG behind
+  them; WebKit fails to cleanly re-rasterise that backdrop source on recompositing. **Fix:**
+  `backdrop-filter` is disabled in normal mode via
+  `.graph-card:not(.graph-fullscreen) .card-head` / `... .graph-controls` (with more opaque
+  solid backgrounds so the light text stays readable); **fullscreen keeps the blur**. If you
+  re-introduce `backdrop-filter` (or any blur/filter) over the animating graph in normal
+  mode, the Safari ghost returns. `contain:paint`, `will-change`, and `translateZ(0)` on the
+  card did **not** fix it.

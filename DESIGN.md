@@ -124,6 +124,9 @@ themes:
 
 - **Glass panels** (`.sidebar`, `.workspace`, `.section`, `.card`): `--surface`
   fill, hairline border, `backdrop-filter: blur(...)`, `--shadow`.
+  > Exception: the graph card's own overlays (`.card-head`, `.graph-controls`) keep their
+  > blur **only in fullscreen** — it is removed in normal mode to avoid a Safari/WebKit
+  > ghosting artifact over the animating graph (see Graph card below).
 - **Pills / chips** (`.pill`, `.metric-chip`, `.stat-chip`): rounded, `--surface-strong`,
   muted text.
 - **Version pill** (`.version-pill`, `#appVersion`): violet-tinted pill in the brand area
@@ -139,6 +142,16 @@ themes:
   controls, detail panel, and tooltip use dark glass (`rgba(10,15,32,0.9x)`). Action bar
   (`.btn-graph`) includes Fullscreen, New tab, and **Export PNG** (renders the current
   viewport to a PNG on a `#060912` canvas background).
+  - **Safari compositing workaround:** the in-card frosted overlays (`.card-head`,
+    `.graph-controls`) use `backdrop-filter: blur()` **only in fullscreen**. In normal
+    (in-flow) mode `.graph-card:not(.graph-fullscreen) .card-head` / `... .graph-controls`
+    drop `backdrop-filter` and use solid, more opaque backgrounds instead — the live blur
+    over the animating force graph left ghost pixels on WebKit's shared layer. Keep these
+    overlays blur-free in normal mode (see AGENTS.md “Known quirks”).
+  - The graph **tooltip** is `position: fixed` and tracks the cursor via
+    `transform: translate3d()` (compositor-only) with an opacity-only fade — do not animate
+    its `left`/`top`. `#ruleGraph` carries **no** `will-change`/layer promotion (d3-zoom
+    scales its inner `<g>`; promoting the SVG causes a hover zoom-snap).
 - **Log / Console** (`.log`): near-black mono console (`#0a0f1e`).
 - **Toast / Tooltip / Help modal**: dark glass surfaces consistent with the theme.
 - **Help modal** (`.help-modal`): a searchable, two-pane dialog (topic nav + content). The

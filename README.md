@@ -427,6 +427,11 @@ context — `file://` and `http://localhost` both qualify.
   chart looks wrong.
 - **PNG export and external assets:** the export serializes the live SVG to a canvas. Adding
   cross-origin `<image>` content into the graph could taint the canvas and make export fail.
+- **Safari graph rendering:** to avoid a WebKit compositing artifact (ghost node pixels that
+  appeared as the force layout settled), the graph card's frosted-glass overlays drop their
+  `backdrop-filter` blur in normal mode and keep it only in fullscreen. Functionally
+  identical; only the in-card header/control bars look solid instead of frosted in the
+  inline view.
 - **Single worksheet:** only the first sheet of the workbook is read.
 
 ---
