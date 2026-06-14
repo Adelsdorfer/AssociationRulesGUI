@@ -70,19 +70,28 @@ All logic is inside the single `<script>` block in `index.html`. The pipeline:
 - **`renderTable`** — sortable, searchable D3 table; columns chosen via `renderMetricChooser`.
 - **`renderCharts`** → **`renderTopChart`** (Top-20 cost bar chart) + **`renderGraph`**
   (force-directed rule network; nodes = items, directed edges = rules).
-  - `renderTopChart` bars **animate in** (width `0` → value over ~650 ms). Clicking a bar
+  - `renderTopChart` bars **animate in** (width `0` → final over `TOP_BAR_ANIMATION_MS`,
+    650 ms, `easeCubicOut`; skipped under `prefers-reduced-motion`). It takes
+    `{ animate }`, returns the animation duration, and stores each bar's target width on
+    `data-final-width` so **`replayTopBarAnimation`** can re-run it. Clicking a bar
     calls **`showCombinationInGraph`**, which sets the **Graph search** field + graph
     min-confidence to `0` and switches to the Graph tab — it intentionally does **not**
     auto-fit/zoom the graph (the auto-fit was removed; users pan/zoom or hit **Fit graph**).
-  - `renderGraph` sets the SVG `viewBox` **once per render** from the card size. A
-    `ResizeObserver` re-syncs it to the card size **only** when the topbar **graph
-    auto-resize** switch is on (`state.graphAutoResize`, off by default); window `resize`
-    always triggers a full re-render regardless. The
+  - `renderGraph` sets the SVG `viewBox` **once per render** from the card size (there is no
+    `ResizeObserver`); the window `resize` handler triggers a full re-render. The
     graph **tooltip** is `position: fixed` and follows the cursor via a compositor-only
-    `transform: translate3d(...)` (`moveTooltip`); never animate its `left`/`top` (repaints
-    the box-shadow → flicker). Do **not** put `will-change`/layer-promotion on `#ruleGraph`
-    itself — d3-zoom scales its inner `<g>`, so promoting the SVG re-scales a cached texture
-    on hover (visible zoom-snap). Promote the **card** instead if needed.
+    `transform` (`translate3d` in Chrome, plain `translate` in Safari — see `moveTooltip`);
+    never animate its `left`/`top` (repaints the box-shadow → flicker). Do **not** put
+    `will-change`/layer-promotion on `#ruleGraph` itself — d3-zoom scales its inner `<g>`,
+    so promoting the SVG re-scales a cached texture on hover (visible zoom-snap). Promote
+    the **card** instead if needed (Safari only — see “Known quirks”).
+  - **Safari-specific rendering** (`state.isSafari`, set by `detectSafariBrowser` /
+    `initBrowserFlags`, also mirrored as the `html.is-safari` class): in Safari split view
+    `renderCharts` defers the graph until the Top-20 bars finish, then renders on clean
+    frames via **`renderGraphAfterLayout`** (double `requestAnimationFrame`);
+    `renderGraph` snaps node/link/label coordinates to half-pixels (`svgCoord`) and rounds
+    the zoom transform. Chrome takes the direct path. `isGraphSplitView` /
+    `renderChartsAfterLayout` support this.
 - **`exportRows`** — writes results back to `.xlsx` with SheetJS.
 - **`exportGraphPng`** — exports the **current graph viewport** (clones `#ruleGraph` with
   its live zoom/pan `viewBox`) to a high-res PNG via canvas. Filename comes from
@@ -95,9 +104,10 @@ All logic is inside the single `<script>` block in `index.html`. The pipeline:
 
 ### Central state
 A single `state` object holds `workbookRows`, `headers`, `allRules`, `filteredRules`,
-`visibleRules`, sort settings, `stats`, and saved filter presets. There is no framework
-and no reactive system — functions read from and mutate `state` directly, then call the
-relevant `render*` function.
+`visibleRules`, sort settings, `stats`, the cached graph handles (`graphZoom`,
+`graphSimulation`), an `isSafari` browser flag, and saved filter presets. There is no
+framework and no reactive system — functions read from and mutate `state` directly, then
+call the relevant `render*` function.
 
 ## In-app help (`helpTopics`)
 
@@ -150,13 +160,6 @@ If you change any metric, keep it consistent with `AssociationRulesGUI.py`.
 - `association-rule-filter-presets-v1` — saved filter presets (`FILTER_PRESET_STORAGE_KEY`).
 - `association-rule-sidebar-collapsed` — sidebar collapsed state (`SIDEBAR_COLLAPSED_STORAGE_KEY`).
 - `association-rule-theme` — selected color theme `"dark"` | `"light"` (`THEME_STORAGE_KEY`); defaults to dark.
-- `association-rule-graph-autoresize` — graph auto-resize toggle `"1"` | `"0"`
-  (`GRAPH_AUTORESIZE_STORAGE_KEY`); defaults to off. A topbar pill switch
-  (`#graphResizeToggleBtn`, next to the theme toggle) flips `state.graphAutoResize`
-  (`applyGraphAutoResize` / `toggleGraphAutoResize` / `initGraphAutoResize`) and re-renders
-  the graph. When **on**, `renderGraph` attaches a `ResizeObserver` that keeps the SVG
-  `viewBox` synced to the card size; when **off** (default) the viewBox is set once per
-  render — off avoids the Safari compositing ghost (see “Known quirks”).
 - `association-graph-<timestamp>-<rand>` — transient payload for the "open graph in new tab" feature.
 - Preset JSON export/import uses `FILTER_PRESET_EXPORT_VERSION` (currently `1`); bump it on a breaking schema change.
 
@@ -202,16 +205,24 @@ If you change any metric, keep it consistent with `AssociationRulesGUI.py`.
 - PNG export relies on serializing the live SVG; if you add external `<image>` or
   cross-origin assets into the graph, the canvas may taint and `toBlob` will fail.
 - **Safari graph ghost artifact (WebKit compositing):** in normal (in-flow) mode, Safari
-  could leave ghost/stacked node pixels ~1 s after a render, when the force simulation
-  settled and the shared document layer re-composited (Chrome was always clean; fullscreen
-  / open-in-new-tab were clean because `position: fixed` / sole content isolate the card on
-  its own surface). Root cause: the two frosted-glass overlays **inside** the graph card —
-  `.graph-card .card-head` (`blur(12px)`) and the absolutely-positioned `.graph-controls`
-  (`blur(16px)`) — have `backdrop-filter`, which must sample the live animating SVG behind
-  them; WebKit fails to cleanly re-rasterise that backdrop source on recompositing. **Fix:**
-  `backdrop-filter` is disabled in normal mode via
-  `.graph-card:not(.graph-fullscreen) .card-head` / `... .graph-controls` (with more opaque
-  solid backgrounds so the light text stays readable); **fullscreen keeps the blur**. If you
-  re-introduce `backdrop-filter` (or any blur/filter) over the animating graph in normal
-  mode, the Safari ghost returns. `contain:paint`, `will-change`, and `translateZ(0)` on the
-  card did **not** fix it.
+  could leave ghost/stacked node pixels after a render, when the Top-20 bar animation ended
+  and the shared document layer re-composited (Chrome was always clean; fullscreen /
+  open-in-new-tab were clean because `position: fixed` / sole content isolate the card on
+  its own backing surface). Safari is detected once (`detectSafariBrowser` → `state.isSafari`
+  + the `html.is-safari` class) and **all** Safari workarounds are gated on it, so Chrome is
+  never affected. The combined fix:
+  1. **CSS (Safari only):** drop `backdrop-filter` on the two in-card frosted overlays in
+     normal mode (`html.is-safari .graph-card:not(.graph-fullscreen) .card-head` /
+     `... .graph-controls`, with solid opaque backgrounds so the light text stays readable),
+     and hard-promote the card to its own layer
+     (`html.is-safari .graph-card:not(.graph-fullscreen) { transform: translateZ(0);
+     backface-visibility: hidden; }`). Fullscreen keeps the frosted glass. Put the promotion
+     on the **card**, never on `#ruleGraph` (d3-zoom scales the SVG's inner `<g>` → hover
+     zoom-snap).
+  2. **JS (Safari only):** defer the graph render until the bars finish + render on clean
+     frames (`renderCharts` → `renderGraphAfterLayout`), snap coordinates/zoom to half-pixels
+     (`svgCoord`), and use a plain `translate()` tooltip transform.
+  If you re-introduce `backdrop-filter`/blur/filter over the animating graph in Safari
+  normal mode, or move the layer promotion onto `#ruleGraph`, the artifact/zoom-snap
+  returns. (`will-change` alone and `contain:paint` did **not** hold in WebKit; the hard
+  `translateZ(0)` + `backface-visibility:hidden` promotion does.)

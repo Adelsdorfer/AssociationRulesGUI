@@ -367,7 +367,6 @@ The app stores a few things in the browser via `localStorage`:
 | `association-rule-filter-presets-v1` | Saved filter presets |
 | `association-rule-sidebar-collapsed` | Sidebar collapsed/expanded state |
 | `association-rule-theme` | Selected color theme (`dark` / `light`) |
-| `association-rule-graph-autoresize` | Graph auto-resize toggle (topbar switch) |
 | `association-graph-<timestamp>-<rand>` | Transient payload for "open graph in new tab" |
 
 The preset JSON export carries a `version` field (currently `1`) so future schema changes
@@ -430,10 +429,12 @@ context — `file://` and `http://localhost` both qualify.
 - **PNG export and external assets:** the export serializes the live SVG to a canvas. Adding
   cross-origin `<image>` content into the graph could taint the canvas and make export fail.
 - **Safari graph rendering:** to avoid a WebKit compositing artifact (ghost node pixels that
-  appeared as the force layout settled), the graph card's frosted-glass overlays drop their
-  `backdrop-filter` blur in normal mode and keep it only in fullscreen. Functionally
-  identical; only the in-card header/control bars look solid instead of frosted in the
-  inline view.
+  appeared as the Top-20 bars finished animating), Safari is detected at startup and a set of
+  WebKit-only workarounds is applied — the graph card's frosted-glass overlays drop their
+  `backdrop-filter` blur in normal mode (kept in fullscreen), the card is promoted to its own
+  compositing layer, the graph render is deferred until the bars settle, and node coordinates
+  are snapped to half-pixels. **Chrome, Edge, and Firefox are unaffected** and keep the full
+  frosted-glass look; the workarounds are functionally invisible.
 - **Single worksheet:** only the first sheet of the workbook is read.
 
 ---
