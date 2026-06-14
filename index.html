@@ -207,6 +207,8 @@
       display: grid;
       grid-template-rows: auto auto minmax(0, 1fr);
       min-width: 0;
+      height: calc(100vh - 44px);
+      min-height: calc(100vh - 44px);
       border-radius: var(--radius-lg);
       overflow: hidden;
     }
@@ -646,6 +648,7 @@
       gap: 18px;
       min-height: min(680px, calc(100vh - 265px));
       max-height: calc(100vh - 265px);
+      align-items: stretch;
     }
 
     .card {
@@ -689,6 +692,30 @@
       color: #eaeefb;
     }
 
+    @media (min-width: 1181px) {
+      #graphPanel .chart-grid {
+        height: 100%;
+        min-height: 0;
+        max-height: none;
+      }
+
+      #graphPanel .chart-grid > .card {
+        display: grid;
+        grid-template-rows: auto minmax(0, 1fr);
+        min-height: 0;
+      }
+
+      #graphPanel #topChart {
+        height: 100%;
+        min-height: 0;
+      }
+
+      #graphPanel .graph-card {
+        min-height: 0;
+        max-height: none;
+      }
+    }
+
     .graph-card.graph-fullscreen {
       position: fixed;
       inset: 14px;
@@ -719,7 +746,7 @@
        leaves stale ghost pixels (Chrome handles it; fullscreen is position:fixed so
        it is isolated and clean). Dropping backdrop-filter in normal mode removes the
        backdrop-sampling-over-animation entirely. Fullscreen keeps the blur. */
-    .graph-card:not(.graph-fullscreen) .card-head {
+    html.is-safari .graph-card:not(.graph-fullscreen) .card-head {
       background: rgba(6, 9, 18, 0.86);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
@@ -796,7 +823,7 @@
        live SVG and leaves ghost pixels on WebKit's shared layer when the simulation
        settles. Drop the blur in normal mode and use a solid dark panel so the light
        labels/inputs stay readable. Fullscreen keeps the frosted glass. */
-    .graph-card:not(.graph-fullscreen) .graph-controls {
+    html.is-safari .graph-card:not(.graph-fullscreen) .graph-controls {
       background: rgba(9, 13, 28, 0.9);
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
@@ -818,7 +845,7 @@
       display: block;
     }
 
-    .graph-card:not(.graph-fullscreen) {
+    html.is-safari .graph-card:not(.graph-fullscreen) {
       /* SAFARI-ONLY artifact fix. Chrome composites cleanly; Safari/WebKit leaves
          stale ghost pixels when the SHARED document layer is re-composited — which
          happens in normal view when the Top-20 bar animation ends and when the
@@ -1053,6 +1080,16 @@
       transition: opacity 120ms ease;
       font-size: 13px;
       line-height: 1.35;
+    }
+
+    html.is-safari .graph-tooltip {
+      /* Safari/WebKit can re-composite the split graph when a fixed overlay with
+         blur-like shadows fades above it. Keep the tooltip cheap in Safari only:
+         no animated opacity, no shadow raster, and no long-lived transform layer. */
+      box-shadow: none;
+      will-change: auto;
+      transition: none;
+      contain: layout paint style;
     }
 
     .graph-tooltip.visible {
@@ -1685,6 +1722,26 @@
       background: #f5f7fc;
     }
 
+    :root[data-theme="light"] .graph-tooltip {
+      border-color: rgba(20, 28, 48, 0.16);
+      color: #1b2438;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow: 0 18px 40px rgba(31, 45, 80, 0.18);
+    }
+
+    :root[data-theme="light"].is-safari .graph-card:not(.graph-fullscreen) .card-head {
+      border-color: rgba(20, 28, 48, 0.10);
+      background: rgba(255, 255, 255, 0.92);
+      color: #1b2438;
+    }
+
+    :root[data-theme="light"].is-safari .graph-card:not(.graph-fullscreen) .graph-controls {
+      border-color: rgba(20, 28, 48, 0.16);
+      background: rgba(255, 255, 255, 0.94);
+      color: #1b2438;
+      box-shadow: 0 20px 50px rgba(31, 45, 80, 0.14);
+    }
+
     :root[data-theme="light"] .help-backdrop {
       background: rgba(20, 28, 48, 0.4);
     }
@@ -1859,11 +1916,6 @@
           <span class="stat-chip"><span>Visible</span><strong id="statVisible">0</strong></span>
         </div>
         <div class="topbar-actions">
-          <button class="switch-toggle" id="graphResizeToggleBtn" type="button" role="switch" aria-checked="false" aria-label="Enable graph auto-resize" title="Graph auto-resize: re-fit the rule graph when its panel changes size. Off by default to avoid a Safari rendering artifact.">
-            <span class="switch-toggle-thumb" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 4 4 4 4 9"/><polyline points="15 20 20 20 20 15"/><line x1="4" y1="4" x2="10" y2="10"/><line x1="20" y1="20" x2="14" y2="14"/></svg>
-            </span>
-          </button>
           <button class="theme-toggle" id="themeToggleBtn" type="button" role="switch" aria-checked="false" aria-label="Switch to light mode" title="Toggle light / dark mode">
             <span class="theme-toggle-icon moon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></span>
             <span class="theme-toggle-icon sun" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2" fill="currentColor" stroke="none"/><line x1="12" y1="1.6" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22.4"/><line x1="1.6" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22.4" y2="12"/><line x1="4.2" y1="4.2" x2="5.9" y2="5.9"/><line x1="18.1" y1="18.1" x2="19.8" y2="19.8"/><line x1="4.2" y1="19.8" x2="5.9" y2="18.1"/><line x1="18.1" y1="5.9" x2="19.8" y2="4.2"/></svg></span>
@@ -1991,6 +2043,7 @@
     const SIDEBAR_COLLAPSED_STORAGE_KEY = "association-rule-sidebar-collapsed";
     const THEME_STORAGE_KEY = "association-rule-theme";
     const GRAPH_AUTORESIZE_STORAGE_KEY = "association-rule-graph-autoresize";
+    const TOP_BAR_ANIMATION_MS = 650;
 
     const helpTopics = [
       {
@@ -2320,9 +2373,20 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       graphSimulation: null,
       graphResizeObserver: null,
       graphAutoResize: false,
+      isSafari: false,
       savedFilterPresets: {},
       activeFilterPreset: ""
     };
+
+    function detectSafariBrowser() {
+      const ua = navigator.userAgent;
+      return /Safari/.test(ua) && !/(Chrome|Chromium|CriOS|FxiOS|Edg\/|OPR\/)/.test(ua);
+    }
+
+    function initBrowserFlags() {
+      state.isSafari = detectSafariBrowser();
+      document.documentElement.classList.toggle("is-safari", state.isSafari);
+    }
 
     const columns = [
       { key: "antecedents", label: "Antecedents", always: true },
@@ -2474,7 +2538,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
     }
 
     function initGraphAutoResize() {
-      applyGraphAutoResize(localStorage.getItem(GRAPH_AUTORESIZE_STORAGE_KEY) === "1", false);
+      applyGraphAutoResize(false, false);
     }
 
     function chartInk() {
@@ -3366,7 +3430,15 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
     function renderCharts() {
       try {
-        renderTopChart();
+        window.clearTimeout(window._chartGraphDelay);
+        const barAnimationMs = renderTopChart({ animate: true });
+        if (state.isSafari && isGraphSplitView() && barAnimationMs) {
+          // Safari/WebKit can leave ghost pixels when the visible graph SVG and
+          // the Top-20 SVG animate on the same in-flow layer. In Safari split
+          // view, finish the bars first, then render the graph on clean frames.
+          window._chartGraphDelay = window.setTimeout(renderGraphAfterLayout, barAnimationMs + 40);
+          return;
+        }
         renderGraph();
       } catch (error) {
         console.error(error);
@@ -3375,7 +3447,34 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       }
     }
 
-    function renderTopChart() {
+    function renderGraphAfterLayout() {
+      window.cancelAnimationFrame(window._graphRenderFrameA);
+      window.cancelAnimationFrame(window._graphRenderFrameB);
+      window._graphRenderFrameA = window.requestAnimationFrame(() => {
+        window._graphRenderFrameB = window.requestAnimationFrame(() => {
+          renderGraph();
+        });
+      });
+    }
+
+    function renderChartsAfterLayout() {
+      window.cancelAnimationFrame(window._chartRenderFrameA);
+      window.cancelAnimationFrame(window._chartRenderFrameB);
+      window._chartRenderFrameA = window.requestAnimationFrame(() => {
+        window._chartRenderFrameB = window.requestAnimationFrame(() => {
+          renderCharts();
+        });
+      });
+    }
+
+    function isGraphSplitView() {
+      const graphCard = el("graphCard");
+      return el("graphPanel").classList.contains("active") &&
+        !graphCard.classList.contains("graph-fullscreen") &&
+        !document.body.classList.contains("graph-only");
+    }
+
+    function renderTopChart(options = {}) {
       const svg = d3.select("#topChart");
       const ink = chartInk();
       svg.selectAll("*").remove();
@@ -3392,7 +3491,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           .attr("fill", ink.axisText)
           .attr("font-weight", 800)
           .text("No Top 20 data available.");
-        return;
+        return 0;
       }
 
       const grouped = d3.rollups(
@@ -3455,13 +3554,16 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       gradient.append("stop").attr("offset", "0%").attr("stop-color", "#8b7bff");
       gradient.append("stop").attr("offset", "100%").attr("stop-color", "#22d3ee");
 
+      const finalBarWidth = d => Math.max(2, x(d.total) - margin.left);
       const bars = svg.append("g")
         .selectAll("rect")
         .data(grouped)
         .join("rect")
+        .attr("shape-rendering", "geometricPrecision")
         .attr("x", margin.left)
         .attr("y", d => y(d.id))
         .attr("width", 0)
+        .attr("data-final-width", d => finalBarWidth(d))
         .attr("height", y.bandwidth())
         .attr("rx", 9)
         .attr("fill", "url(#barGradient)")
@@ -3471,10 +3573,17 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           showCombinationInGraph(d);
         });
 
-      bars
-        .transition()
-        .duration(650)
-        .attr("width", d => Math.max(2, x(d.total) - margin.left));
+      const animateBars = options.animate !== false &&
+        !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      if (animateBars) {
+        bars
+          .transition()
+          .duration(TOP_BAR_ANIMATION_MS)
+          .ease(d3.easeCubicOut)
+          .attr("width", finalBarWidth);
+      } else {
+        bars.attr("width", finalBarWidth);
+      }
 
       svg.append("g")
         .selectAll("text")
@@ -3492,12 +3601,33 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           showCombinationInGraph(d);
         })
         .text(d => d3.format(",.0f")(d.total));
+      return animateBars ? TOP_BAR_ANIMATION_MS : 0;
+    }
+
+    function replayTopBarAnimation() {
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return 0;
+      const bars = d3.select("#topChart").selectAll("rect");
+      if (!bars.size()) return 0;
+      bars.interrupt()
+        .attr("width", 0)
+        .transition()
+        .duration(TOP_BAR_ANIMATION_MS)
+        .ease(d3.easeCubicOut)
+        .attr("width", function() {
+          return Number(this.getAttribute("data-final-width")) || 0;
+        });
+      return TOP_BAR_ANIMATION_MS;
     }
 
     function showCombinationInGraph(combination) {
       el("graphSearch").value = combination.id;
       el("graphMinConfidence").value = "0";
-      switchTab("graphPanel");
+      if (!el("graphPanel").classList.contains("active")) {
+        switchTab("graphPanel", { renderGraph: false });
+      }
+      renderGraphAfterLayout();
+      window.clearTimeout(window._topBarReplayTimer);
+      window._topBarReplayTimer = window.setTimeout(replayTopBarAnimation, state.isSafari && isGraphSplitView() ? 90 : 0);
       toast(`Graph filtered to ${combination.label} (${combination.id}).`);
     }
 
@@ -3654,6 +3784,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .attr("markerUnits", "userSpaceOnUse")
         .attr("orient", "auto")
         .append("path")
+        .attr("shape-rendering", "geometricPrecision")
         .attr("fill", ink.arrow)
         .attr("d", "M0,-5L10,0L0,5");
 
@@ -3663,18 +3794,30 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       const nodeLayer = zoomLayer.append("g");
       const labelLayer = zoomLayer.append("g");
 
+      const svgCoord = value => state.isSafari ? Math.round(value * 2) / 2 : value;
       const zoom = d3.zoom()
         .scaleExtent([0.18, 4])
-        .on("zoom", event => zoomLayer.attr("transform", event.transform));
+        .on("zoom", event => {
+          const transform = event.transform;
+          if (state.isSafari) {
+            zoomLayer.attr("transform", `translate(${Math.round(transform.x)},${Math.round(transform.y)}) scale(${transform.k})`);
+            return;
+          }
+          zoomLayer.attr("transform", transform);
+        });
       svg.call(zoom);
       state.graphZoom = { svg, zoom, width, height, content: zoomLayer.node() };
 
       seedNodePositions(nodes, links, width, height);
 
       // Optional: keep the SVG viewBox in sync with the card size while it is open.
-      // Off by default (toggle in the topbar) because re-mapping the viewBox after the
-      // initial render can trigger a Safari/WebKit compositing ghost over the graph.
-      if (state.graphAutoResize && typeof ResizeObserver === "function") {
+      // Only allow this in fullscreen/new-tab mode. In split view the observer can
+      // feed back into the card size through WebKit's SVG sizing and cause a growth
+      // loop, so split view always stays on the static viewBox from fitGraph().
+      const allowGraphAutoResize = state.graphAutoResize &&
+        typeof ResizeObserver === "function" &&
+        (el("graphCard").classList.contains("graph-fullscreen") || document.body.classList.contains("graph-only"));
+      if (allowGraphAutoResize) {
         const svgNode = svg.node();
         const observer = new ResizeObserver(() => {
           const nextWidth = svgNode.clientWidth || width;
@@ -3701,6 +3844,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       const link = linkLayer.selectAll("path")
         .data(links)
         .join("path")
+        .attr("shape-rendering", "geometricPrecision")
         .attr("fill", "none")
         .attr("stroke", d => edgeColor(d.confidence))
         .attr("stroke-opacity", 0.66)
@@ -3735,6 +3879,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         if (itemCount === 1) {
           group.append("circle")
             .attr("class", "node-part")
+            .attr("shape-rendering", "geometricPrecision")
             .attr("r", radius(d.count))
             .attr("fill", "#8b7bff")
             .attr("stroke", ink.nodeStroke)
@@ -3746,6 +3891,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
           .data(compoundNodeParts(d))
           .join("circle")
           .attr("class", "node-part")
+          .attr("shape-rendering", "geometricPrecision")
           .attr("cx", part => part.x)
           .attr("cy", part => part.y)
           .attr("r", part => part.r)
@@ -3767,8 +3913,17 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         .text(d => truncate(d.label, d.items > 1 ? 30 : 24));
 
       const tooltip = d3.select("#graphTooltip");
-      const moveTooltip = event => tooltip.style("transform", `translate3d(${event.clientX + 14}px, ${event.clientY + 14}px, 0)`);
+      const moveTooltip = event => {
+        const x = Math.round(event.clientX + 14);
+        const y = Math.round(event.clientY + 14);
+        const transform = state.isSafari ? `translate(${x}px, ${y}px)` : `translate3d(${x}px, ${y}px, 0)`;
+        tooltip.style("transform", transform);
+      };
       let focusedNodeId = null;
+
+      function hoverHighlightEnabled() {
+        return el("graphCard").classList.contains("graph-fullscreen") || document.body.classList.contains("graph-only");
+      }
 
       function addNodeCost(nodeDatum, combinationKey, amount) {
         const costKey = `${combinationKey}|${nodeDatum.id}`;
@@ -3931,9 +4086,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       node
         .on("mouseenter", (event, d) => {
           if (focusedNodeId) return;
-          node.attr("opacity", n => n.id === d.id || links.some(link => (link.source.id === d.id && link.target.id === n.id) || (link.target.id === d.id && link.source.id === n.id)) ? 1 : 0.22);
-          link.attr("stroke-opacity", link => link.source.id === d.id || link.target.id === d.id ? 0.95 : 0.10);
-          edgeLabel.attr("opacity", link => link.source.id === d.id || link.target.id === d.id ? 1 : 0.16);
+          if (hoverHighlightEnabled()) {
+            node.attr("opacity", n => n.id === d.id || links.some(link => (link.source.id === d.id && link.target.id === n.id) || (link.target.id === d.id && link.source.id === n.id)) ? 1 : 0.22);
+            link.attr("stroke-opacity", link => link.source.id === d.id || link.target.id === d.id ? 0.95 : 0.10);
+            edgeLabel.attr("opacity", link => link.source.id === d.id || link.target.id === d.id ? 1 : 0.16);
+          }
           moveTooltip(event);
           tooltip.classed("visible", true).html(`<strong>${d.label}</strong><br>Rule connections: ${d.degree}<br>Combination count sum: ${d.count}<br>Node cost sum: ${formatCurrency(d.costSum)}<br>Transaction IDs: ${formatTransactionIds([...d.transactionIds])}<br><span style="opacity:0.78">Costs counted once per visible combination.</span>`);
         })
@@ -3943,9 +4100,11 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
             tooltip.classed("visible", false);
             return;
           }
-          node.attr("opacity", 1);
-          link.attr("stroke-opacity", 0.66);
-          edgeLabel.attr("opacity", 1);
+          if (hoverHighlightEnabled()) {
+            node.attr("opacity", 1);
+            link.attr("stroke-opacity", 0.66);
+            edgeLabel.attr("opacity", 1);
+          }
           tooltip.classed("visible", false);
         })
         .on("click", (event, d) => {
@@ -3969,20 +4128,24 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
       simulation.on("tick", () => {
         link.attr("d", d => {
-          const dx = d.target.x - d.source.x;
-          const dy = d.target.y - d.source.y;
+          const sourceX = svgCoord(d.source.x);
+          const sourceY = svgCoord(d.source.y);
+          const targetNodeX = svgCoord(d.target.x);
+          const targetNodeY = svgCoord(d.target.y);
+          const dx = targetNodeX - sourceX;
+          const dy = targetNodeY - sourceY;
           const distance = Math.sqrt(dx * dx + dy * dy) || 1;
           const targetRadius = nodeVisualRadius(d.target) + 10;
-          const targetX = d.target.x - (dx / distance) * targetRadius;
-          const targetY = d.target.y - (dy / distance) * targetRadius;
-          const dr = distance * 1.45;
-          return `M${d.source.x},${d.source.y}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
+          const targetX = svgCoord(targetNodeX - (dx / distance) * targetRadius);
+          const targetY = svgCoord(targetNodeY - (dy / distance) * targetRadius);
+          const dr = svgCoord(distance * 1.45);
+          return `M${sourceX},${sourceY}A${dr},${dr} 0 0,1 ${targetX},${targetY}`;
         });
-        node.attr("transform", d => `translate(${d.x},${d.y})`);
-        label.attr("x", d => d.x).attr("y", d => d.y + nodeVisualRadius(d) + 14);
+        node.attr("transform", d => `translate(${svgCoord(d.x)},${svgCoord(d.y)})`);
+        label.attr("x", d => svgCoord(d.x)).attr("y", d => svgCoord(d.y + nodeVisualRadius(d) + 14));
         edgeLabel
-          .attr("x", d => edgeLabelPosition(d).x)
-          .attr("y", d => edgeLabelPosition(d).y);
+          .attr("x", d => svgCoord(edgeLabelPosition(d).x))
+          .attr("y", d => svgCoord(edgeLabelPosition(d).y));
 
         if (state.pendingFit && simulation.alpha() < 0.06) {
           state.pendingFit = false;
@@ -4046,8 +4209,10 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
         (width - padding * 2) / bounds.width,
         (height - padding * 2) / bounds.height
       )));
-      const tx = (width - bounds.width * scale) / 2 - bounds.x * scale;
-      const ty = (height - bounds.height * scale) / 2 - bounds.y * scale;
+      const rawTx = (width - bounds.width * scale) / 2 - bounds.x * scale;
+      const rawTy = (height - bounds.height * scale) / 2 - bounds.y * scale;
+      const tx = state.isSafari ? Math.round(rawTx) : rawTx;
+      const ty = state.isSafari ? Math.round(rawTy) : rawTy;
       apply.call(
         zoom.transform,
         d3.zoomIdentity.translate(tx, ty).scale(scale)
@@ -4248,11 +4413,14 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       }
     }
 
-    function switchTab(panelId) {
+    function switchTab(panelId, options = {}) {
+      const alreadyActive = el(panelId)?.classList.contains("active");
       document.querySelectorAll(".tab").forEach(item => item.classList.toggle("active", item.dataset.tab === panelId));
       document.querySelectorAll(".panel").forEach(item => item.classList.toggle("active", item.id === panelId));
-      if (panelId === "graphPanel") {
-        window.setTimeout(renderCharts, 80);
+      if (panelId === "graphPanel" && !alreadyActive) {
+        if (options.renderGraph !== false) {
+          renderChartsAfterLayout();
+        }
       }
     }
 
@@ -4268,7 +4436,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       });
       el("helpOpenBtn").addEventListener("click", openHelp);
       el("themeToggleBtn").addEventListener("click", toggleTheme);
-      el("graphResizeToggleBtn").addEventListener("click", toggleGraphAutoResize);
       el("helpCloseBtn").addEventListener("click", closeHelp);
       el("helpBackdrop").addEventListener("click", closeHelp);
       el("helpSearch").addEventListener("input", renderHelpTopics);
@@ -4319,7 +4486,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       window.addEventListener("resize", () => {
         window.clearTimeout(window._resizeTimer);
         window._resizeTimer = window.setTimeout(() => {
-          renderTopChart();
+          renderTopChart({ animate: false });
           renderGraph();
         }, 180);
       });
@@ -4331,6 +4498,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       document.title = `Association Rules Studio v${APP_VERSION}`;
     }
 
+    initBrowserFlags();
     applyAppVersion();
     initTheme();
     initGraphAutoResize();

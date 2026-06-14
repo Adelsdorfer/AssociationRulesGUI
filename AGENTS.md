@@ -1,217 +1,258 @@
 # AGENTS.md
 
-Guidance for AI coding agents (and humans) working in this repository.
+Guidance for coding agents and contributors working in this repository.
 
-## Project overview
+## Project summary
 
-**Association Rules Studio** is a single-file, fully client-side web application for
-**market-basket / association-rule mining** on Excel data. It is a browser port of the
-Python tool `AssociationRulesGUI.py` in the `Reference/` folder — there is **no server,
-no build step, and no `mlxtend` dependency**. The Apriori algorithm, frequent-itemset
-generation, and rule generation are all implemented from scratch in plain JavaScript.
+Association Rules Studio is a single-file browser application for association-rule mining
+on Excel data. The HTML app is a port of the Python GUI in `AssociationRulesGUI.py` and
+implements Apriori and rule generation directly in JavaScript.
 
-Everything (HTML markup, CSS, and JavaScript) lives in **`index.html`**. The two `.js`
-files are vendored third-party libraries loaded via `<script>` tags.
+Core constraints:
+
+- no build system
+- no package manager
+- no server requirement
+- no framework
+- no `mlxtend`
+- no edits to vendored third-party libraries
+
+Everything user-facing happens from `index.html`.
 
 ## Repository layout
 
 | Path | Purpose |
-|---|---|
-| `index.html` | The entire application: HTML + CSS (`<style>`) + JS (`<script>`). **This is the only file you edit.** |
-| `xlsx.full.min.js` | Vendored [SheetJS](https://sheetjs.com/) — reads `.xlsx`/`.xls` input and writes `.xlsx` exports. Do not edit. |
-| `d3.v7.min.js` | Vendored [D3.js v7](https://d3js.org/) — table rendering, charts, force-directed graph, scales, color interpolation. Do not edit. |
-| `Arbeitsdatei-Quelle.xlsx` | Sample/working input workbook for manual testing. |
-| `association-rule-filter-presets.json` | Example exported filter presets (importable via the **Filter presets** panel). |
-| `Reference/AssociationRulesGUI.py` | The original Python reference implementation. Source of truth for algorithm behavior. |
-| `DESIGN.md` | Visual/design-system documentation (theme tokens, layout, conventions). |
-| `AGENTS.md` | This file. |
+| --- | --- |
+| `index.html` | Entire web app: HTML, CSS, JS |
+| `AssociationRulesGUI.py` | Primary Python reference implementation |
+| `Reference/AssociationRulesGUI.py` | Historical/reference copy of the Python GUI |
+| `Arbeitsdatei-Quelle.xlsx` | Sample workbook for manual testing |
+| `association-rule-filter-presets.json` | Example exported preset JSON |
+| `d3.v7.min.js` | Vendored D3.js |
+| `xlsx.full.min.js` | Vendored SheetJS |
+| `README.md` | User-facing project documentation |
+| `DESCRIPTION.md` | Short-form project description |
+| `DESIGN.md` | Design-system and layout documentation |
+| `AGENTS.md` | This file |
 
-## How to run
+## Runtime model
 
-There is no build and no package manager. To run, open `index.html` directly in a
-browser (`file://`) — all libraries are local, so it works fully offline. For testing,
-load `Arbeitsdatei-Quelle.xlsx` via the **Input** file picker, then click **Run analysis**.
+Open `index.html` directly in a browser or serve the folder with any static server.
 
-There are **no automated tests, no linter config, and no CI**. Verification is manual:
-open the page, run an analysis, and confirm the table, Top-20 chart, and graph render.
+Normal manual verification uses:
 
-## Input data contract
+1. `Arbeitsdatei-Quelle.xlsx`
+2. `Run analysis`
+3. the `Console`, `Table`, and `Graph & Top 20` tabs
 
-The first worksheet is read with `XLSX.utils.sheet_to_json(..., { header: 1 })`.
-Columns are interpreted **positionally** (the header names are informational only):
+There is no automated test suite in this folder.
 
-1. Column 1 → transaction ID
-2. Column 2 → item / material
-3. Column 3 → order number (used to build `Mat_combination` and `unique_ID`)
-4. Column 4 → consumption *(optional)*
-5. Column 5 → price *(optional; converted to unit price via `price / consumption`)*
+## Input contract
 
-At least 3 columns and 2 rows (1 header + 1 data) are required.
+The first worksheet is read with `XLSX.utils.sheet_to_json(..., { header: 1, defval: null, raw: true })`.
 
-## Architecture & data flow
+Column mapping is positional:
 
-All logic is inside the single `<script>` block in `index.html`. The pipeline:
+1. transaction ID
+2. item / material
+3. order number
+4. consumption (optional)
+5. price (optional)
 
-1. **`handleFile`** — reads the workbook with SheetJS into `state.workbookRows`.
-2. **`preprocessRows`** — applies include/exclude term filters and the consumption
-   filter, derives unit prices, and groups rows into transactions per ID.
-3. **`apriori`** — classic Apriori: count single items ≥ `minSupport`, then iteratively
-   build size-`k` candidates via **`createCandidates`** (join + prune) up to
-   `maxItemsetSize`.
-4. **`buildRules`** — splits each frequent itemset into antecedent/consequent subsets,
-   computes metrics, and assigns a deterministic 8-digit `unique_ID`
-   (`createUnique8DigitId`, SHA-256 based).
-5. **`runAnalysis`** — orchestrates the above, validates inputs (thresholds plus a rule
-   that the **include-items** field must contain either 0 or ≥ 2 comma-separated terms),
-   logs progress, sorts by confidence/lift, stores results on the central `state` object,
-   and schedules the sidebar to auto-collapse 3 s after a successful run.
+At least 3 columns and 2 rows are required.
 
-### Presentation layer
-- **`renderTable`** — sortable, searchable D3 table; columns chosen via `renderMetricChooser`.
-- **`renderCharts`** → **`renderTopChart`** (Top-20 cost bar chart) + **`renderGraph`**
-  (force-directed rule network; nodes = items, directed edges = rules).
-  - `renderTopChart` bars **animate in** (width `0` → value over ~650 ms). Clicking a bar
-    calls **`showCombinationInGraph`**, which sets the **Graph search** field + graph
-    min-confidence to `0` and switches to the Graph tab — it intentionally does **not**
-    auto-fit/zoom the graph (the auto-fit was removed; users pan/zoom or hit **Fit graph**).
-  - `renderGraph` sets the SVG `viewBox` **once per render** from the card size. A
-    `ResizeObserver` re-syncs it to the card size **only** when the topbar **graph
-    auto-resize** switch is on (`state.graphAutoResize`, off by default); window `resize`
-    always triggers a full re-render regardless. The
-    graph **tooltip** is `position: fixed` and follows the cursor via a compositor-only
-    `transform: translate3d(...)` (`moveTooltip`); never animate its `left`/`top` (repaints
-    the box-shadow → flicker). Do **not** put `will-change`/layer-promotion on `#ruleGraph`
-    itself — d3-zoom scales its inner `<g>`, so promoting the SVG re-scales a cached texture
-    on hover (visible zoom-snap). Promote the **card** instead if needed.
-- **`exportRows`** — writes results back to `.xlsx` with SheetJS.
-- **`exportGraphPng`** — exports the **current graph viewport** (clones `#ruleGraph` with
-  its live zoom/pan `viewBox`) to a high-res PNG via canvas. Filename comes from
-  **`graphPngFilename`**: if the **Graph search** field contains a number, its first digit
-  run is used as a `<number>_` prefix (e.g. `12345678_rule-graph.png`), else
-  `rule-graph.png`.
-- **`setBusy`** — toggles the run button spinner and the runtime status pill; the pill
-  gets the `is-ready` class (green) only when idle and showing "ready".
-- Filter presets, help modal, sidebar collapse, and graph-only mode round out the UI.
+## Main pipeline
 
-### Central state
-A single `state` object holds `workbookRows`, `headers`, `allRules`, `filteredRules`,
-`visibleRules`, sort settings, `stats`, and saved filter presets. There is no framework
-and no reactive system — functions read from and mutate `state` directly, then call the
-relevant `render*` function.
+Everything lives in the single `<script>` block in `index.html`.
 
-## In-app help (`helpTopics`)
+1. `handleFile`
+   - reads the workbook into `state.workbookRows`
+   - stores headers and source filename
 
-The Help modal (`#helpModal`) is data-driven by the **`helpTopics`** array near the top of
-the `<script>` block. Each entry is `{ id, title, html }`; `title` is rendered via
-`textContent` (use a plain `&`, not `&amp;`), while `html` is injected via `innerHTML`.
-`renderHelpTopics()` builds the topic nav and supports text search across title + stripped
-html; `showHelpTopic(id)` swaps the content.
+2. `preprocessRows`
+   - applies include/exclude filters
+   - optionally removes consumption-zero rows
+   - derives unit prices
+   - groups rows into transactions
 
-- The help content is intentionally **comprehensive and mirrors `README.md`**: overview,
-  quick start, input format, thresholds, filters, running, table/Top-20, graph, metrics,
-  output columns, presets, exports, architecture, persistence/privacy, browser
-  support/limits, the full **License & open-source** topic, and version/contact.
-- Help HTML may use `<table class="help-table">`, `<pre class="help-license">`, `<ul>/<ol>`,
-  `<code>`, and `<a target="_blank" rel="noopener noreferrer">`; all are styled in the help
-  CSS block. Keep help copy in **English**.
-- **When app behavior changes, update the matching help topic** (and usually `README.md`)
-  so the in-app docs stay accurate.
+3. `apriori`
+   - mines frequent itemsets
+   - uses classic join-and-prune candidate generation
+   - respects `maxItemsetSize`
 
-## Metrics (must match the Python reference)
+4. `buildRules`
+   - enumerates antecedent/consequent splits
+   - computes metrics
+   - computes cost fields
+   - collects matching transaction IDs
+   - generates deterministic 8-digit `unique_ID` values
 
-| Metric | Formula |
-|---|---|
-| Confidence | `supportAC / supportA` |
-| Lift | `confidence / supportC` |
-| Leverage | `supportAC − supportA·supportC` |
-| Conviction | `(1 − supportC) / (1 − confidence)` (∞ when confidence = 1) |
-| Zhang's metric | `zhangsMetric(supportA, supportC, supportAC)` |
+5. `runAnalysis`
+   - validates thresholds
+   - validates include-term rules
+   - logs progress
+   - sorts results
+   - updates shared state
 
-If you change any metric, keep it consistent with `AssociationRulesGUI.py`.
+## UI structure
 
-## Versioning & licensing
+The app is split into:
 
-- The app version is the JS constant **`APP_VERSION`** (top of the `<script>` block,
-  currently `"1.0"`). `applyAppVersion()` (run on init) surfaces it in the brand version
-  pill (`#appVersion`), the sidebar copyright line (`#sidebarCopyright`), and
-  `document.title`. The "Open-source software" help topic also reads `APP_VERSION`. Bump
-  this single constant to release a new version.
-- The project is licensed under **GPL-3.0** (`LICENSE.txt`). `LICENSE.txt` also reproduces
-  the full third-party license texts and attribution notices: SheetJS (Apache-2.0, banner
-  `/*! xlsx.js (C) 2013-present SheetJS ... */`), D3.js (ISC, banner `// https://d3js.org
-  v7.9.0 Copyright 2010-2023 Mike Bostock`), and the UI fonts (SIL OFL 1.1). Those in-file
-  banners must stay intact and the vendored files are used unmodified. The **License &
-  open-source** help topic mirrors these terms (including the full ISC text). When
-  adding/removing a bundled component, update `LICENSE.txt`, that help topic, and the
-  README third-party table together.
+- a left sidebar with input, thresholds, text filters, presets, and run/export actions
+- a right workspace with topbar, tabs, and one active panel
 
-## Persistence (localStorage keys)
+Workspace tabs:
 
-- `association-rule-filter-presets-v1` — saved filter presets (`FILTER_PRESET_STORAGE_KEY`).
-- `association-rule-sidebar-collapsed` — sidebar collapsed state (`SIDEBAR_COLLAPSED_STORAGE_KEY`).
-- `association-rule-theme` — selected color theme `"dark"` | `"light"` (`THEME_STORAGE_KEY`); defaults to dark.
-- `association-rule-graph-autoresize` — graph auto-resize toggle `"1"` | `"0"`
-  (`GRAPH_AUTORESIZE_STORAGE_KEY`); defaults to off. A topbar pill switch
-  (`#graphResizeToggleBtn`, next to the theme toggle) flips `state.graphAutoResize`
-  (`applyGraphAutoResize` / `toggleGraphAutoResize` / `initGraphAutoResize`) and re-renders
-  the graph. When **on**, `renderGraph` attaches a `ResizeObserver` that keeps the SVG
-  `viewBox` synced to the card size; when **off** (default) the viewBox is set once per
-  render — off avoids the Safari compositing ghost (see “Known quirks”).
-- `association-graph-<timestamp>-<rand>` — transient payload for the "open graph in new tab" feature.
-- Preset JSON export/import uses `FILTER_PRESET_EXPORT_VERSION` (currently `1`); bump it on a breaking schema change.
+- `Console`
+- `Table`
+- `Graph & Top 20`
 
-## Conventions & house rules
+The topbar also contains:
 
-- **Edit only `index.html`.** Never modify the vendored `*.min.js` libraries.
-- **No new dependencies, no build tooling, no server.** The app must keep working from a
-  bare `file://` open, fully offline.
-- **Keep it one file.** Do not split HTML/CSS/JS into separate files unless explicitly
-  requested.
-- **CSS:** the design is token-driven via `:root` custom properties (`--ink`, `--surface`,
-  `--pine`, etc.). Prefer changing/using tokens over hardcoding colors. See `DESIGN.md`.
-- **Theme toggle:** the topbar switch (`#themeToggleBtn`) flips between the default **dark**
-  "Deep Space" theme and a **light** theme. Light mode is `:root[data-theme="light"]`, which
-  redefines the tokens plus overrides for the few hardcoded dark backgrounds (html gradient,
-  starfield, topbar, tabs, table header, graph card, console, detail panel). `applyTheme` /
-  `toggleTheme` / `initTheme` manage the `data-theme` attribute and `THEME_STORAGE_KEY`.
-- **Colors injected from JS** (D3 `.attr("fill"/"stroke")`, chart gradients, node palette,
-  `scaleSequential` interpolators) are **not** covered by CSS tokens — update them in the
-  script when changing the theme. Theme-dependent chart/graph text + stroke colors come from
-  the **`chartInk()`** helper; `toggleTheme` re-runs `renderCharts()` so they pick up the swap.
-- **Verify D3 APIs exist in the bundled build** before using them, e.g.
-  `grep -o piecewise d3.v7.min.js`. The vendored file is a specific v7 build.
-- **2-space indentation**, double-quoted strings, `const`/`let`, `camelCase` for JS;
-  existing UI copy and log messages are in **English**.
-- **User-facing errors** are surfaced via `throw new Error(...)` inside `runAnalysis`
-  (caught → `toast` + `log`), or directly via `toast(...)`/`log(...)`.
-- Don't add comments, docstrings, or refactors to code you didn't change.
+- compact stats chips
+- graph auto-resize toggle
+- theme toggle
+- runtime status pill
+- Help button
 
-## Known quirks / gotchas
+## Rendering responsibilities
 
-- `unique_ID` is derived from `Mat_combination` (the order numbers). Two different
-  item-combinations that share the same set of order numbers can therefore collide.
-- Apriori candidate counting is `O(candidates × transactions)` per level — fine for
-  spare-parts datasets, but can be slow on very large/dense data. `maxItemsetSize` (default
-  4) bounds this in the browser.
-- `renderCharts` is wrapped in `try/catch`; a runtime error in the graph fails silently to
-  a toast/log instead of crashing — check the Console panel when a chart looks wrong.
-- The expanding workspace grid row must stay on the **panel** row. The topbar now holds
-  the title plus compact stat chips (Transactions/Items/Rules/Visible) and the status pill
-  + Help button, so `.workspace` uses `grid-template-rows: auto auto minmax(0, 1fr)`
-  (topbar, tabs, panel) — the old separate `.stats` row was removed.
-- PNG export relies on serializing the live SVG; if you add external `<image>` or
-  cross-origin assets into the graph, the canvas may taint and `toBlob` will fail.
-- **Safari graph ghost artifact (WebKit compositing):** in normal (in-flow) mode, Safari
-  could leave ghost/stacked node pixels ~1 s after a render, when the force simulation
-  settled and the shared document layer re-composited (Chrome was always clean; fullscreen
-  / open-in-new-tab were clean because `position: fixed` / sole content isolate the card on
-  its own surface). Root cause: the two frosted-glass overlays **inside** the graph card —
-  `.graph-card .card-head` (`blur(12px)`) and the absolutely-positioned `.graph-controls`
-  (`blur(16px)`) — have `backdrop-filter`, which must sample the live animating SVG behind
-  them; WebKit fails to cleanly re-rasterise that backdrop source on recompositing. **Fix:**
-  `backdrop-filter` is disabled in normal mode via
-  `.graph-card:not(.graph-fullscreen) .card-head` / `... .graph-controls` (with more opaque
-  solid backgrounds so the light text stays readable); **fullscreen keeps the blur**. If you
-  re-introduce `backdrop-filter` (or any blur/filter) over the animating graph in normal
-  mode, the Safari ghost returns. `contain:paint`, `will-change`, and `translateZ(0)` on the
-  card did **not** fix it.
+### `renderTable`
+
+- renders visible rules with sortable headers
+- respects `quickSearch`
+- respects metric visibility chips
+- updates visible counts
+
+### `renderTopChart`
+
+- renders the Top-20 weighted consequent cost chart
+- uses D3 scales and SVG
+- animates bar widths on normal chart renders
+- stores target widths in `data-final-width` for replay
+
+### `showCombinationInGraph`
+
+- sets the graph search field to the clicked combination ID
+- forces graph min-confidence to `0`
+- switches to the graph tab when needed
+- re-renders the graph
+- replays Top-20 bar animation
+
+### `renderGraph`
+
+- tears down any previous graph state before re-rendering
+- builds nodes and links from current visible rules
+- configures zoom, drag, force simulation, tooltips, focus mode, and detail panel
+- supports fullscreen and graph-only modes
+
+### `renderCharts`
+
+- renders Top 20 and graph together
+- includes Safari-sensitive sequencing so the graph does not repaint at the worst possible
+  moment relative to the bar animation
+
+## Graph behavior details
+
+Important current behavior:
+
+- Clicking a node focuses it and hides unrelated nodes/edges.
+- Clicking a node or edge opens a fixed detail panel with copyable transaction IDs.
+- Hovering shows a lighter-weight transient tooltip.
+- The `Confidence %` checkbox toggles edge labels.
+- `New tab` opens a graph-only mode using a transient `localStorage` payload.
+- `Export PNG` exports the current viewport, not an abstract fresh graph.
+
+Compound itemsets are rendered as touching multiple circles rather than one circle.
+
+## Safari / WebKit constraints
+
+Safari required explicit rendering workarounds. Preserve these unless you have verified a
+better fix:
+
+- In normal split view, graph overlays should not use live `backdrop-filter`.
+- Tooltip behavior in Safari is intentionally simplified.
+- The graph `ResizeObserver` is only allowed in fullscreen or graph-only mode.
+- Do not promote `#ruleGraph` itself to a composited layer; that caused zoom-snap effects.
+- Avoid turning split-view layout or graph sizing into a feedback loop. Safari is much less
+  forgiving here than Chrome.
+
+If you touch graph sizing, tooltip positioning, transitions, or `ResizeObserver` logic,
+test Safari explicitly.
+
+## Central state
+
+Shared mutable state lives in `state`.
+
+Relevant keys:
+
+- `workbookRows`
+- `headers`
+- `sourceName`
+- `allRules`
+- `filteredRules`
+- `visibleRules`
+- `sortColumn`
+- `sortAsc`
+- `stats`
+- `graphZoom`
+- `graphSimulation`
+- `graphResizeObserver`
+- `graphAutoResize`
+- `isSafari`
+- `savedFilterPresets`
+- `activeFilterPreset`
+
+There is no framework and no reactive data layer. Functions mutate `state` directly and
+call explicit `render*()` functions.
+
+## Persistence
+
+The app uses `localStorage` for:
+
+- `association-rule-filter-presets-v1`
+- `association-rule-sidebar-collapsed`
+- `association-rule-theme`
+- `association-rule-graph-autoresize`
+- transient `association-graph-<timestamp>-<rand>` keys
+
+Presets are not automatically written to a project JSON file during normal use. The JSON
+file in the repository is an example exported artifact.
+
+## Documentation sync rules
+
+When behavior changes, keep these aligned:
+
+- `README.md`
+- `DESCRIPTION.md`
+- `DESIGN.md`
+- this `AGENTS.md`
+- the in-app `helpTopics` content inside `index.html`
+
+Common drift points:
+
+- default thresholds
+- visible default metric columns
+- graph controls
+- storage model for presets
+- Safari-specific behavior
+- repository file layout
+
+## Coding rules for this repository
+
+- Edit `index.html` unless the task is specifically about documentation.
+- Do not edit `d3.v7.min.js` or `xlsx.full.min.js`.
+- Keep the app runnable from `file://`.
+- Prefer small, explicit state changes and direct render calls.
+- Match existing style: 2-space indentation, double-quoted strings, `const`/`let`,
+  `camelCase`.
+- Keep user-facing UI text and logs in English.
+
+## Known functional caveats
+
+- `unique_ID` can collide because it is derived from order-number combinations.
+- Apriori runtime grows quickly on large or dense datasets.
+- Graph export can fail if cross-origin image content is introduced into the SVG.
+- Only the first worksheet is processed.
+- Graph problems often surface in the `Console` tab rather than as hard crashes because
+  `renderCharts()` is guarded by `try/catch`.
