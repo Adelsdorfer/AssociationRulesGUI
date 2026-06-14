@@ -1,28 +1,28 @@
 # Association Rules Studio — v1.0
 
-Association Rules Studio is a single-file, fully client-side web application for
-association-rule mining on Excel workbooks.
+**Association Rules Studio** is a single-file, fully client-side web app for
+**market-basket / association-rule mining** on Excel data. Load a workbook, mine frequent
+itemsets with **Apriori**, generate association rules with a full suite of interestingness
+metrics, and explore everything through a sortable table, a Top-20 cost chart, and an
+interactive force-directed rule network — all in a dark "deep space" UI.
 
-It reads transaction/item/order data from `.xlsx` or `.xls`, mines frequent itemsets with
-Apriori, builds association rules in plain JavaScript, and presents the results in three
-views:
+It is a browser port of the Python tool `AssociationRulesGUI.py`: **no server, no build
+step, no installation, and no `mlxtend` dependency**. Apriori, frequent-itemset generation,
+and rule generation are implemented from scratch in plain JavaScript. Open `index.html` and
+it runs, fully offline.
 
-- a Console tab for runtime logging,
-- a sortable/filterable Table tab,
-- a Graph & Top 20 tab with a weighted cost chart and an interactive D3 rule network.
+## Highlights
 
-The application is the browser counterpart to `AssociationRulesGUI.py`, but it does not use
-`mlxtend` or any Python runtime. The full app lives in `index.html`, supported by vendored
-copies of D3.js and SheetJS.
+- **Zero install, fully offline** — one `index.html` plus two vendored libraries (SheetJS, D3).
+- **Excel in, Excel out** — read `.xlsx`/`.xls`, export rules back to `.xlsx`.
+- **From-scratch Apriori** with configurable support, confidence, and max itemset size.
+- **Full metric suite** — support, confidence, lift, leverage, conviction, Zhang's metric,
+  combination count, plus cost-based metrics.
+- **Interactive results** — sortable/searchable table, Top-20 cost chart, and a zoomable,
+  draggable rule graph with PNG export.
+- **Filter presets** — save, load, and share reusable filter configurations.
+- **Privacy first** — all processing happens locally; your data never leaves the browser.
 
-Key capabilities:
+## Version 1.0
 
-- configurable support, confidence, and itemset-size thresholds
-- cost-aware metrics and weighted consequent-cost ranking
-- click-through from Top 20 into the graph
-- node/edge detail panel with copyable transaction IDs
-- fullscreen graph, graph-only new-tab mode, and PNG export
-- filter presets stored in the browser plus JSON export/import
-- searchable in-app Help and dark/light themes
-
-All processing happens locally in the browser.
+This is the **initial public release**. Licensed under **GPL-3.0**.

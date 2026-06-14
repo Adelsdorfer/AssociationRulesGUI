@@ -1431,7 +1431,7 @@
       box-shadow: 0 0 0 4px rgba(139, 123, 255, 0.25);
     }
 
-    /* Generic on/off pill switch (graph auto-resize toggle in the topbar). */
+    /* Generic on/off pill switch styling (currently used by the theme toggle only). */
     .switch-toggle {
       position: relative;
       flex: 0 0 auto;
@@ -2042,7 +2042,6 @@
     const FILTER_PRESET_EXPORT_VERSION = 1;
     const SIDEBAR_COLLAPSED_STORAGE_KEY = "association-rule-sidebar-collapsed";
     const THEME_STORAGE_KEY = "association-rule-theme";
-    const GRAPH_AUTORESIZE_STORAGE_KEY = "association-rule-graph-autoresize";
     const TOP_BAR_ANIMATION_MS = 650;
 
     const helpTopics = [
@@ -2371,8 +2370,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       },
       graphZoom: null,
       graphSimulation: null,
-      graphResizeObserver: null,
-      graphAutoResize: false,
       isSafari: false,
       savedFilterPresets: {},
       activeFilterPreset: ""
@@ -2514,31 +2511,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
 
     function initTheme() {
       applyTheme(localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark", false);
-    }
-
-    function applyGraphAutoResize(enabled, persist = true) {
-      state.graphAutoResize = !!enabled;
-      const toggle = el("graphResizeToggleBtn");
-      if (toggle) {
-        toggle.classList.toggle("is-on", state.graphAutoResize);
-        toggle.setAttribute("aria-checked", state.graphAutoResize ? "true" : "false");
-        toggle.setAttribute("aria-label", state.graphAutoResize ? "Disable graph auto-resize" : "Enable graph auto-resize");
-      }
-      if (persist) {
-        localStorage.setItem(GRAPH_AUTORESIZE_STORAGE_KEY, state.graphAutoResize ? "1" : "0");
-      }
-    }
-
-    function toggleGraphAutoResize() {
-      applyGraphAutoResize(!state.graphAutoResize);
-      // Re-render the graph so the ResizeObserver is attached/detached for the new setting.
-      if (state.filteredRules && state.filteredRules.length) {
-        renderGraph();
-      }
-    }
-
-    function initGraphAutoResize() {
-      applyGraphAutoResize(false, false);
     }
 
     function chartInk() {
@@ -3675,10 +3647,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       //  4) remove all DOM children and clear the cached zoom handle.
       svg.interrupt();
       svg.selectAll("*").interrupt();
-      if (state.graphResizeObserver) {
-        state.graphResizeObserver.disconnect();
-        state.graphResizeObserver = null;
-      }
       if (state.graphSimulation) {
         state.graphSimulation.stop();
         state.graphSimulation = null;
@@ -3809,28 +3777,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
       state.graphZoom = { svg, zoom, width, height, content: zoomLayer.node() };
 
       seedNodePositions(nodes, links, width, height);
-
-      // Optional: keep the SVG viewBox in sync with the card size while it is open.
-      // Only allow this in fullscreen/new-tab mode. In split view the observer can
-      // feed back into the card size through WebKit's SVG sizing and cause a growth
-      // loop, so split view always stays on the static viewBox from fitGraph().
-      const allowGraphAutoResize = state.graphAutoResize &&
-        typeof ResizeObserver === "function" &&
-        (el("graphCard").classList.contains("graph-fullscreen") || document.body.classList.contains("graph-only"));
-      if (allowGraphAutoResize) {
-        const svgNode = svg.node();
-        const observer = new ResizeObserver(() => {
-          const nextWidth = svgNode.clientWidth || width;
-          const nextHeight = svgNode.clientHeight || height;
-          svg.attr("viewBox", [0, 0, nextWidth, nextHeight]);
-          if (state.graphZoom) {
-            state.graphZoom.width = nextWidth;
-            state.graphZoom.height = nextHeight;
-          }
-        });
-        observer.observe(svgNode);
-        state.graphResizeObserver = observer;
-      }
 
       const simulation = d3.forceSimulation(nodes)
         .force("link", d3.forceLink(links).id(d => d.id).distance(d => 130 + Math.min(160, String(d.source.id || d.source).length + String(d.target.id || d.target).length)))
@@ -4501,7 +4447,6 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</pre>
     initBrowserFlags();
     applyAppVersion();
     initTheme();
-    initGraphAutoResize();
     renderMetricChooser();
     renderHelpTopics();
     initSidebarState();
